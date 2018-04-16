@@ -1,6 +1,6 @@
 /*************************************************************** 
  * Student Name: Jeff Morton
- * File Name: client.c
+ * File Name: bbclient.c
  * Assignment Number: 
  * Date Due: Apr 15, 2018
  * 
