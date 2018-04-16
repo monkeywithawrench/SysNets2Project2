@@ -16,7 +16,7 @@
 #include <netinet/in.h>     //Structures to store address information
 #include <unistd.h>         //Needed for access() to check file information, as well as read() and write()
 
-
+#include "bbutils.h"		//Library for functions and data types needed by both client and server
 
 
 //The server
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
 	//size_t client;
-
+	client_t clientList[numberOfClients];
 
 	//Check socket success
 	socket_hold = socket(AF_INET, SOCK_STREAM, 0);
