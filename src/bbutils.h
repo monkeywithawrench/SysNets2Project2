@@ -15,6 +15,6 @@
 /* Data struct for list of clients */
 typedef struct
 {
-    char hostname[BUFFER_SIZE+1]; //+1 to include '\0'
+    char hostname[BUFFER_SIZE];
     int port;
 }client_t;
