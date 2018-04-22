@@ -17,4 +17,5 @@ message	//optional message for the client
 Join request:
 <join request>
 ip port //this is the client's ip address and port number they can be reached with
+filename //this is the filename of the bbfile we want to write and read to. 
 </join request>

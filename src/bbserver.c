@@ -62,7 +62,10 @@ int main(int argc, char *argv[]) {
 	}
 
 
+	//get all client info
+	getClients(sockfd, clientList, numberOfClients);
 
+	//TODO possibly create a new bbfile to read/write to, or simply determine that it exists.
 
 
 }
@@ -81,6 +84,26 @@ void getClients(int sockfd, client_t *clientList, int numberOfClients) {
 			exit(errno);
 		}
 		//if we made it this far, no errors yet
-		//TODO make a function in bbutils.c that reads messages in message format, including tags like connect
+		char temp[strlen(buffer)+1]; //+1 for null term
+		strcpy(temp, buffer);
+		char *token;
+		char delim[2] = "\n";
+		token = strtok(temp, delim);  // first call returns pointer to first part of user_input separated by delim
+		if(token==NULL) { //error checking
+			fprintf(stderr, "Message from client empty or incorrect format, not a join request!\n");
+			exit(1);
+		}
+		if(strcmp(token, "<join request>")==0) {//if this is a join request
+			token = strtok(NULL, delim);  // every call with NULL uses saved user_input value and returns next substring
+			if(token==NULL) { //error checking
+				fprintf(stderr, "Message from client empty or incorrect format, not a join request!\n");
+				exit(1);
+			}
+			delim = " ";
+			token = strtok(temp, delim); //ip from 2nd line
+			strcpy(clientList[i].hostname, token);
+			token = strtok(NULL, delim); //get port# from 2nd line
+			clientList[i].port = atoi(token);
+		}
 	}
 }
