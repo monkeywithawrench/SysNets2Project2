@@ -7,10 +7,10 @@
  *  Created on: Apr 15, 2018
  *      Author: Jeff Morton
  ***************************************************************/
-#include <stdio.h>          //Standard library
+#include <stdio.h>          //Standard IO
 #include <stdlib.h>         //Standard library
-#include <strings.h>        //Strings Library
-#include <string.h>         //String Library
+#include <string.h>        //String Library
+//#include <strings.h>         //Strings Library
 #include <sys/socket.h>     //API and definitions for the sockets
 #include <sys/types.h>      //more definitions
 #include <netinet/in.h>     //Structures to store address information
@@ -23,9 +23,9 @@
 //The client
 int main(int argc, char *argv[]){
 
-	struct sockaddr_in server_address;//IPV4
+	struct sockaddr_in serverAddr, clientAddr;//IPV4
 	struct hostent *server;//store info of host
-	int socket_hold, clientPort, serverPort, n;
+	int sockfd, clientPort, serverPort, n;
 	char buffer[BUFFER_SIZE]; //TODO handle this
 	char filename[BUFFER_SIZE];
 	char serverHostname[BUFFER_SIZE];
@@ -54,38 +54,41 @@ int main(int argc, char *argv[]){
 	}
 
 	//Check for socket
-	socket_hold = socket(AF_INET, SOCK_STREAM, 0);//return file descriptor, else -1
-	if (socket_hold < 0 ){
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);//return file descriptor, else -1
+	if (sockfd < 0 ){
 		fprintf(stderr,"Socket Failed with error number: %d\n", errno); //TODO double check that socket() actually sets errno
-      		exit(errno);
+		exit(errno);
 	}
 
-	memset((char*) &server_address,0,sizeof(server_address));
-	server_address.sin_family = AF_INET;//For internet, IP address, address family
-	memmove((char*) &server_address.sin_addr.s_addr,(char*)server->h_addr,server->h_length);
-	server_address.sin_port = htons(serverPort);
+	memset((char*) &serverAddr,0,sizeof(serverAddr));
+	serverAddr.sin_family = AF_INET;//For internet, IP address, address family
+	memmove((char*) &serverAddr.sin_addr.s_addr,(char*)server->h_addr,server->h_length);
+	serverAddr.sin_port = htons(serverPort);
 
+	/*
 	//Check the connection
-	int checkConnect = connect(socket_hold,(struct sockaddr *)&server_address,sizeof(server_address));//(reference to socket by file descriptor,the specified address, address space of socket)
+	int checkConnect = connect(sockfd,(struct sockaddr *)&server_address,sizeof(server_address));//(reference to socket by file descriptor,the specified address, address space of socket)
 	if (checkConnect < 0) {
 		fprintf(stderr,"Failed connection with error number: %d\n", errno);
       		exit(errno);
 	}
+	*/ //TODO remove this
 
 
 	char *joinRequest;
 	//Set up join request to send to server
-	asprintf(&joinRequest, "<join request>\n", buffer);
+	asprintf(&joinRequest, "<join request>\n");
 	asprintf(&joinRequest, "%s%s %s\n", joinRequest, serverHostname, clientPort);
 	asprintf(&joinRequest, "%s%s\n", joinRequest, filename);
 	asprintf(&joinRequest, "%s</join request>\n");
 
-	n = write(socket_hold,joinRequest,strlen(joinRequest));//(reference to socket by file descriptor, the message written, write up to this length
+	//n = write(sockfd,joinRequest,strlen(joinRequest));//(reference to socket by file descriptor, the message written, write up to this length
+	n = sendto(sockfd,joinRequest,strlen(joinRequest),0,(struct sockaddr *)&serverAddr,sizeof(serverAddr));//for more info, see https://beej.us/guide/bgnet/html/multi/sockaddr_inman.html
 
-	//Check write success
+	//Check sendto success
 	if (n < 0){
-		fprintf(stderr,"Writing to socket failed with error number: %d\n", errno);
-			exit(errno);
+		fprintf(stderr,"sendto(server) failed with error number: %d\n", errno);
+		exit(errno);
 	}
 
 
