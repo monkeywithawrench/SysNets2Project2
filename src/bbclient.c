@@ -54,9 +54,9 @@ int main(int argc, char *argv[]){
 	}
 
 	//Check for socket
-	sockfd = socket(AF_INET, SOCK_STREAM, 0);//return file descriptor, else -1
+	sockfd = socket(AF_INET, SOCK_DGRAM, 0); //return file descriptor, else -1 //was SOCK_STREAM
 	if (sockfd < 0 ){
-		fprintf(stderr,"Socket Failed with error number: %d\n", errno); //TODO double check that socket() actually sets errno
+		fprintf(stderr,"Getting sockfd from socket() failed, error number %d\n", errno);
 		exit(errno);
 	}
 

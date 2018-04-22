@@ -55,9 +55,9 @@ int main(int argc, char *argv[]) {
 	client_t clientList[numberOfClients];
 
 	//Check socket success
-	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	sockfd = socket(AF_INET, SOCK_DGRAM, 0); //return file descriptor, else -1 //was SOCK_STREAM
 	if (sockfd < 0) {
-		fprintf(stderr,"Opening socket failed, error number %d\n", errno);
+		fprintf(stderr,"Getting sockfd from socket() failed, error number %d\n", errno);
 		exit(errno);
 	}
 
