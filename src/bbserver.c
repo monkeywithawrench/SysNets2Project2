@@ -61,19 +61,22 @@ int main(int argc, char *argv[]) {
 		exit(errno);
 	}
 
-	//Start socketing process
+	/*
+	//Start socketing process //NOT NEEDED FOR UNCONNECTED UDP
 	memset((char *) &serverAddr,0,sizeof(serverAddr));
 	port = atoi(argv[1]);
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_addr.s_addr = INADDR_ANY;
 	serverAddr.sin_port = htons(port);
+	*/
 
-	//Check binding success
+	/*
+	//Check binding success //NOT NEEDED FOR UNCONNECTED UDP
 	if (bind(sockfd, (struct sockaddr *) &serverAddr,sizeof(serverAddr)) != 0) {//the socket, its cast, the size
 		fprintf(stderr,"Binding failed with error number %d\n", errno);
 		exit(errno);
 	}
-
+	*/
 
 	//get all client info
 	getClients(sockfd, clientList, numberOfClients);
