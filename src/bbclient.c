@@ -27,7 +27,6 @@ int main(int argc, char *argv[]){
 	struct hostent *server;//store info of host
 	int socket_hold, clientPort, serverPort, n;
 	char buffer[BUFFER_SIZE]; //TODO handle this
-	char content[CONTENT_MAX_SIZE]; //TODO handle this
 	char filename[BUFFER_SIZE];
 	char serverHostname[BUFFER_SIZE];
 
@@ -74,14 +73,14 @@ int main(int argc, char *argv[]){
 	}
 
 
-	char *getrequest; //TODO Refactor this to joinRequest after finished copying
+	char *joinRequest;
 	//Set up join request to send to server
-	asprintf(&getrequest, "<join request>\n", buffer);
-	asprintf(&getrequest, "%s%s %s\n", getrequest, serverHostname, clientPort);
-	asprintf(&getrequest, "%s%s\n", getrequest, filename);
-	asprintf(&getrequest, "%s</join request>\n");
+	asprintf(&joinRequest, "<join request>\n", buffer);
+	asprintf(&joinRequest, "%s%s %s\n", joinRequest, serverHostname, clientPort);
+	asprintf(&joinRequest, "%s%s\n", joinRequest, filename);
+	asprintf(&joinRequest, "%s</join request>\n");
 
-	n = write(socket_hold,getrequest,strlen(getrequest));//(reference to socket by file descriptor, the message written, write up to this length
+	n = write(socket_hold,joinRequest,strlen(joinRequest));//(reference to socket by file descriptor, the message written, write up to this length
 
 	//Check write success
 	if (n < 0){
@@ -89,4 +88,11 @@ int main(int argc, char *argv[]){
 			exit(errno);
 	}
 
+
+	//TODO wait for token
+
+	//TODO remember to open the bbfile with mode a+ ( fopen("a.txt", "a+") )
+
+
+	return(0);
 }
