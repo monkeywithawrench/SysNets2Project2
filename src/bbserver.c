@@ -7,9 +7,10 @@
  *  Created on: Apr 15, 2018
  *      Author: Jeff Morton
  ***************************************************************/
+#define _GNU_SOURCE			//Need this for asprintf(), otherwise we get implicit declaration
 #include <stdio.h>          //Standard IO
 #include <stdlib.h>         //Standard library
-#include <string.h>        //String Library
+#include <string.h>			//String Library
 //#include <strings.h>         //Strings Library
 #include <sys/socket.h>     //API and definitions for the sockets
 #include <sys/types.h>      //more definitions
@@ -22,10 +23,11 @@
 /** Takes in info from clients, populates clientList
  *
  * @param sockfd the socket file descriptor
+ * @param serverAddr the address of the host (ip/hostname and port number) to listen for messages from
  * @param clientList array of client_t structs
  * @param numberOfClients number of client_t structs in the clientList array
  */
-void getClients(int sockfd, client_t *clientList, int numberOfClients);
+void getClients(int sockfd, struct sockaddr_in serverAddr, client_t *clientList, int numberOfClients);
 
 /** Sends neighbor info to the clients in the clientList
  *
@@ -45,7 +47,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	struct sockaddr_in serverAddr;
-	int sockfd, port, readWriteStatus, numberOfClients; //sockfd is socket file descriptor returned by socket()
+	int sockfd, port, numberOfClients; //sockfd is socket file descriptor returned by socket()
 	numberOfClients = atoi(argv[2]);
 	if(numberOfClients<3) { //there must be at least 3 clients to form a the token ring, per project specifications
 		fprintf(stderr,"There must be at least 3 clients to start the token ring.\n");
@@ -60,6 +62,14 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr,"Getting sockfd from socket() failed, error number %d\n", errno);
 		exit(errno);
 	}
+
+	//Setting up server sockaddr_in
+	memset((char *) &serverAddr,0,sizeof(serverAddr));
+	port = atoi(argv[1]);
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_addr.s_addr = INADDR_ANY;
+	serverAddr.sin_port = htons(port);
+
 
 	/*
 	//Start socketing process //NOT NEEDED FOR UNCONNECTED UDP
@@ -79,7 +89,7 @@ int main(int argc, char *argv[]) {
 	*/
 
 	//get all client info
-	getClients(sockfd, clientList, numberOfClients);
+	getClients(sockfd, serverAddr, clientList, numberOfClients);
 
 	//TODO possibly create a new bbfile to read/write to, or simply determine that it exists.
 
@@ -93,17 +103,20 @@ int main(int argc, char *argv[]) {
 /** Takes in info from clients, populates clientList
  *
  * @param sockfd the socket file descriptor
+ * @param serverAddr the address of the host (ip/hostname and port number) to listen for messages from
  * @param clientList array of client_t structs
  * @param numberOfClients number of client_t structs in the clientList array
  */
-void getClients(int sockfd, client_t *clientList, int numberOfClients) {
+void getClients(int sockfd, struct sockaddr_in serverAddr, client_t *clientList, int numberOfClients) {
 	int i;
-	struct sockaddr fromaddr;
+	//struct sockaddr fromaddr;
 	char buffer[BUFFER_SIZE];
 	for(i=0; i<numberOfClients; i++) {
-		memset(&fromaddr, 0, sizeof(fromaddr));
+		//memset(&fromaddr, 0, sizeof(fromaddr));
 		memset(buffer, 0, BUFFER_SIZE);
-		int messagelen = recvfrom(sockfd, buffer, BUFFER_SIZE-1, 0, &fromaddr, sizeof(fromaddr)); //BUFFER_SIZE-1 so null term doesn't overflow buffer
+		size_t addrLen = sizeof(serverAddr);
+		//int messagelen = recvfrom(sockfd, buffer, BUFFER_SIZE-1, 0, &fromaddr, (socklen_t *)(&sizeof(fromaddr))); //BUFFER_SIZE-1 so null term doesn't overflow buffer
+		int messagelen = recvfrom(sockfd, buffer, BUFFER_SIZE-1, 0, (struct sockaddr *) &serverAddr, (socklen_t *)&addrLen); //BUFFER_SIZE-1 so null term doesn't overflow buffer
 		if(messagelen <0) {
 			fprintf(stderr, "Error receiving message from client at the server, error number %d\n", errno);
 			exit(errno);
@@ -124,7 +137,7 @@ void getClients(int sockfd, client_t *clientList, int numberOfClients) {
 				fprintf(stderr, "Message from client empty or incorrect format, not a join request!\n");
 				exit(1);
 			}
-			delim = " ";
+			strncpy(delim, " ", 2);
 			token = strtok(temp, delim); //ip from 2nd line
 			strcpy(clientList[i].hostname, token);
 			token = strtok(NULL, delim); //get port# from 2nd line
@@ -146,11 +159,11 @@ void sendClients(int sockfd, client_t *clientList, int numberOfClients) {
 	//Set up response to send to clients
 	asprintf(&response, "<token>\n");
 	//asprintf(&response, "%s%s\n", response, filename);
-	asprintf(&response, "%s%s\n", response, numberOfClients);
+	asprintf(&response, "%s%d\n", response, numberOfClients);
 	for(i=0; i<numberOfClients; i++)
 		asprintf(&response, "%s%s %d\n", response, clientList[i].hostname, clientList[i].port);
-	asprintf(&response, "%sWinner! Sending first token\n");
-	asprintf(&response, "%s</token>\n");
+	asprintf(&response, "%sWinner! Sending first token\n", response);
+	asprintf(&response, "%s</token>\n", response);
 
 	//send response to client
 	int n = sendMessage(sockfd, clientList[0].hostname, clientList[0].port, response);
