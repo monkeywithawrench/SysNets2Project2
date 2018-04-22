@@ -6,10 +6,10 @@ objects = bbserver.o bbclient.o
 all: bbserver bbclient
 
 bbserver: bbserver.c
-	$(CC) -o bbserver bbserver.c bbutils.h $(CFLAGS)
+	$(CC) -o bbserver bbserver.c bbutils.h bbutils.c $(CFLAGS)
 
 bbclient: bbclient.c
-	$(CC) -o bbclient bbclient.c bbutils.h $(CFLAGS)
+	$(CC) -o bbclient bbclient.c bbutils.h bbutils.c $(CFLAGS)
 
 .PHONY : clean
 clean:
