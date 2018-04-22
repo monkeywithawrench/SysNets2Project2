@@ -7,10 +7,10 @@
  *  Created on: Apr 15, 2018
  *      Author: Jeff Morton
  ***************************************************************/
-#include <stdio.h>          //Standard library
+#include <stdio.h>          //Standard IO
 #include <stdlib.h>         //Standard library
-#include <strings.h>        //Strings Library
-#include <string.h>         //String Library
+#include <string.h>        //String Library
+//#include <strings.h>         //Strings Library
 #include <sys/socket.h>     //API and definitions for the sockets
 #include <sys/types.h>      //more definitions
 #include <netinet/in.h>     //Structures to store address information
@@ -19,8 +19,21 @@
 
 #include "bbutils.h"		//Library for functions and data types needed by both client and server
 
-
+/** Takes in info from clients, populates clientList
+ *
+ * @param sockfd the socket file descriptor
+ * @param clientList array of client_t structs
+ * @param numberOfClients number of client_t structs in the clientList array
+ */
 void getClients(int sockfd, client_t *clientList, int numberOfClients);
+
+/** Sends neighbor info to the clients in the clientList
+ *
+ * @param sockfd the socket file descriptor
+ * @param clientList array of client_t structs
+ * @param numberOfClients number of client_t structs in the clientList array
+ */
+void sendClients(int sockfd, client_t *clientList, int numberOfClients);
 
 
 //The server
@@ -31,8 +44,8 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	struct sockaddr_in server_address;
-	int sockfd, newsocket, port, readWriteStatus, numberOfClients; //sockfd is socket file descriptor returned by socket()
+	struct sockaddr_in serverAddr;
+	int sockfd, port, readWriteStatus, numberOfClients; //sockfd is socket file descriptor returned by socket()
 	numberOfClients = atoi(argv[2]);
 	if(numberOfClients<3) { //there must be at least 3 clients to form a the token ring, per project specifications
 		fprintf(stderr,"There must be at least 3 clients to start the token ring.\n");
@@ -49,14 +62,14 @@ int main(int argc, char *argv[]) {
 	}
 
 	//Start socketing process
-	memset((char *) &server_address,0,sizeof(server_address));
+	memset((char *) &serverAddr,0,sizeof(serverAddr));
 	port = atoi(argv[1]);
-	server_address.sin_family = AF_INET;
-	server_address.sin_addr.s_addr = INADDR_ANY;
-	server_address.sin_port = htons(port);
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_addr.s_addr = INADDR_ANY;
+	serverAddr.sin_port = htons(port);
 
 	//Check binding success
-	if (bind(sockfd, (struct sockaddr *) &server_address,sizeof(server_address)) != 0) {//the socket, its cast, the size
+	if (bind(sockfd, (struct sockaddr *) &serverAddr,sizeof(serverAddr)) != 0) {//the socket, its cast, the size
 		fprintf(stderr,"Binding failed with error number %d\n", errno);
 		exit(errno);
 	}
@@ -67,10 +80,19 @@ int main(int argc, char *argv[]) {
 
 	//TODO possibly create a new bbfile to read/write to, or simply determine that it exists.
 
+	//send client-neighbor info
+	sendClients(sockfd, clientList, numberOfClients);
 
+	return(0);
 }
 
 
+/** Takes in info from clients, populates clientList
+ *
+ * @param sockfd the socket file descriptor
+ * @param clientList array of client_t structs
+ * @param numberOfClients number of client_t structs in the clientList array
+ */
 void getClients(int sockfd, client_t *clientList, int numberOfClients) {
 	int i;
 	struct sockaddr fromaddr;
@@ -105,5 +127,33 @@ void getClients(int sockfd, client_t *clientList, int numberOfClients) {
 			token = strtok(NULL, delim); //get port# from 2nd line
 			clientList[i].port = atoi(token);
 		}
+	}
+}
+
+
+/** Sends neighbor info to the clients in the clientList
+ *
+ * @param sockfd the socket file descriptor
+ * @param clientList array of client_t structs
+ * @param numberOfClients number of client_t structs in the clientList array
+ */
+void sendClients(int sockfd, client_t *clientList, int numberOfClients) {
+	int i;
+	char *response;
+	//Set up response to send to clients
+	asprintf(&response, "<token>\n");
+	//asprintf(&response, "%s%s\n", response, filename);
+	asprintf(&response, "%s%s\n", response, numberOfClients);
+	for(i=0; i<numberOfClients; i++)
+		asprintf(&response, "%s%s %d\n", response, clientList[i].hostname, clientList[i].port);
+	asprintf(&response, "%sWinner! Sending first token\n");
+	asprintf(&response, "%s</token>\n");
+
+	//send response to client
+	int n = sendMessage(sockfd, clientList[0].hostname, clientList[0].port, response);
+	//Check for send success
+	if (n < 0){
+		fprintf(stderr,"sendto(server) failed with error number: %d\n", errno);
+		exit(errno);
 	}
 }
