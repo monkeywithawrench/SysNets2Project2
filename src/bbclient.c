@@ -7,9 +7,10 @@
  *  Created on: Apr 15, 2018
  *      Author: Jeff Morton
  ***************************************************************/
+#define _GNU_SOURCE			//Need this for asprintf(), otherwise we get implicit declaration
 #include <stdio.h>          //Standard IO
 #include <stdlib.h>         //Standard library
-#include <string.h>        //String Library
+#include <string.h>			//String Library
 //#include <strings.h>         //Strings Library
 #include <sys/socket.h>     //API and definitions for the sockets
 #include <sys/types.h>      //more definitions
@@ -23,7 +24,7 @@
 //The client
 int main(int argc, char *argv[]){
 
-	struct sockaddr_in serverAddr, clientAddr;//IPV4 //TODO these probably aren't needed anymore
+	struct sockaddr_in clientAddr;//IPV4 //TODO these probably aren't needed anymore
 	struct hostent *host;//store info of host  //TODO these probably aren't needed anymore
 	int sockfd, clientPort, serverPort, n;
 	char filename[BUFFER_SIZE];
@@ -93,9 +94,9 @@ int main(int argc, char *argv[]){
 	char *joinRequest;
 	//Set up join request to send to server
 	asprintf(&joinRequest, "<join request>\n");
-	asprintf(&joinRequest, "%s%s %s\n", joinRequest, hostname, clientPort);
+	asprintf(&joinRequest, "%s%s %d\n", joinRequest, hostname, clientPort);
 	asprintf(&joinRequest, "%s%s\n", joinRequest, filename);
-	asprintf(&joinRequest, "%s</join request>\n");
+	asprintf(&joinRequest, "%s</join request>\n", joinRequest);
 
 	//n = write(sockfd,joinRequest,strlen(joinRequest));//(reference to socket by file descriptor, the message written, write up to this length
 	//n = sendto(sockfd,joinRequest,strlen(joinRequest),0,(struct sockaddr *)&serverAddr,sizeof(serverAddr));//for more info, see https://beej.us/guide/bgnet/html/multi/sockaddr_inman.html
@@ -107,9 +108,8 @@ int main(int argc, char *argv[]){
 	}
 
 	//Wait for and receive token
-	struct sockaddr fromaddr;
-	memset(&fromaddr, 0, sizeof(fromaddr));
-	int bufferlen = recvfrom(sockfd, NULL, 0, MSG_PEEK, &fromaddr, sizeof(fromaddr)); //Gets length of message in socket buffer. MSG_PEEK specifies check socket buffer but leave it unread
+	size_t addrLen = sizeof(clientAddr);
+	int bufferlen = recvfrom(sockfd, NULL, 0, MSG_PEEK, (struct sockaddr *) &clientAddr, (socklen_t *)&addrLen); //Gets length of message in socket buffer. MSG_PEEK specifies check socket buffer but leave it unread
 	if(bufferlen <0) {
 		fprintf(stderr, "Error receiving(peeking) message from server at the client, error number %d\n", errno);
 		exit(errno);
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]){
 	}
 	char buffer[bufferlen+1]; //sets buffer size to exact length of message +1 char for null terminator
 	memset(buffer, 0, bufferlen+1); //init's the buffer
-	int messagelen = recvfrom(sockfd, buffer, bufferlen, 0, &fromaddr, sizeof(fromaddr)); //copies message into buffer
+	bufferlen = recvfrom(sockfd, buffer, bufferlen, 0, (struct sockaddr *) &clientAddr, (socklen_t *)&addrLen); //copies message into buffer
 
 	fprintf(stdout, "Server response: \n%s\n", buffer);
 
