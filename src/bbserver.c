@@ -59,7 +59,8 @@ int main(int argc, char *argv[]) {
 	//Check socket success
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0); //return file descriptor, else -1 //was SOCK_STREAM
 	if (sockfd < 0) {
-		fprintf(stderr,"Getting sockfd from socket() failed, error number %d\n", errno);
+		fprintf(stderr,"Getting sockfd from socket() failed, error number %d: ", errno);
+		perror();
 		exit(errno);
 	}
 
@@ -83,7 +84,8 @@ int main(int argc, char *argv[]) {
 
 	//Check binding success //NOT NEEDED FOR UNCONNECTED UDP
 	if (bind(sockfd, (struct sockaddr *) &serverAddr,sizeof(serverAddr)) != 0) {//the socket, its cast, the size
-		fprintf(stderr,"Binding failed with error number %d\n", errno);
+		fprintf(stderr,"Binding failed with error number %d: ", errno);
+		perror();
 		exit(errno);
 	}
 
@@ -122,7 +124,8 @@ void getClients(int sockfd, struct sockaddr_in serverAddr, client_t *clientList,
 		int messagelen = recvfrom(sockfd, buffer, BUFFER_SIZE-1, 0, NULL, NULL); //BUFFER_SIZE-1 so null term doesn't overflow buffer
 		//int messagelen = recvfrom(sockfd, buffer, BUFFER_SIZE-1, 0, (struct sockaddr *) &serverAddr, (socklen_t *)&addrLen); //BUFFER_SIZE-1 so null term doesn't overflow buffer
 		if(messagelen <0) {
-			fprintf(stderr, "Error receiving message from client at the server, error number %d\n", errno);
+			fprintf(stderr, "Error receiving message from client at the server, error number %d: ", errno);
+			perror();
 			exit(errno);
 		}
 		fprintf(stdout, "Received client info\n");
@@ -174,8 +177,8 @@ void sendClients(int sockfd, client_t *clientList, int numberOfClients) {
 	int n = sendMessage(sockfd, clientList[0].hostname, clientList[0].port, response);
 	//Check for send success
 	if (n < 0){
-		//fprintf(stderr,"sendto(server) failed with error number: %d\n", errno);
-		perror("sendto(server) failed");
+		fprintf(stderr,"sendto(server) failed with error number: %d: ", errno);
+		perror();
 		exit(errno);
 	}
 }
