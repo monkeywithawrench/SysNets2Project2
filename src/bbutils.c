@@ -34,6 +34,6 @@ int sendMessage(int sockfd, char *hostname, int port, char *message) {
 	destinationAddr.sin_addr.s_addr = INADDR_ANY;
 	destinationAddr.sin_port = htons(port);
 
-	int n = sendto(sockfd,message,strlen(message),0,(struct sockaddr *)&destinationAddr,sizeof(destinationAddr));//for more info, see https://beej.us/guide/bgnet/html/multi/sockaddr_inman.html
+	int n = sendto(sockfd,message,strlen(message),0,(struct sockaddr *)&destinationAddr,(socklen_t *)&(sizeof(destinationAddr)));//for more info, see https://beej.us/guide/bgnet/html/multi/sockaddr_inman.html
 	return(n);
 }
