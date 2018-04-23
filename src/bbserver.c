@@ -173,11 +173,12 @@ void sendClients(int sockfd, client_t *clientList, int numberOfClients) {
 	asprintf(&response, "%sWinner! Sending first token\n", response);
 	asprintf(&response, "%s</token>\n", response);
 
+	fprintf(stdout,"Response:\n%s\n",response);
 	//send response to client
 	int n = sendMessage(sockfd, clientList[0].hostname, clientList[0].port, response);
 	//Check for send success
 	if (n < 0){
-		fprintf(stderr,"sendto(server) failed with error number: %d: ", errno);
+		fprintf(stderr,"sendto(client) failed with error number: %d: ", errno);
 		perror("");
 		exit(errno);
 	}
