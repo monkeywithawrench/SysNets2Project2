@@ -74,13 +74,13 @@ int main(int argc, char *argv[]){
 	serverAddr.sin_port = htons(serverPort);
 	*/
 
-	/*
+
 	//Check binding success //NOT NEEDED FOR UNCONNECTED UDP
 	if (bind(sockfd, (struct sockaddr *) &clientAddr,sizeof(clientAddr)) != 0) {//the socket, its cast, the size
 		fprintf(stderr,"Binding failed with error number %d\n", errno);
 		exit(errno);
 	}
-	*/
+
 
 	/*
 	//Check the connection //NOT NEEDED FOR UNCONNECTED UDP
@@ -113,7 +113,8 @@ int main(int argc, char *argv[]){
 
 	//Wait for and receive token
 	size_t addrLen = sizeof(clientAddr);
-	int bufferlen = recvfrom(sockfd, NULL, 0, MSG_PEEK, (struct sockaddr *) &clientAddr, (socklen_t *)&addrLen); //Gets length of message in socket buffer. MSG_PEEK specifies check socket buffer but leave it unread
+	//int bufferlen = recvfrom(sockfd, NULL, 0, MSG_PEEK, (struct sockaddr *) &clientAddr, (socklen_t *)&addrLen); //Gets length of message in socket buffer. MSG_PEEK specifies check socket buffer but leave it unread
+	int bufferlen = recvfrom(sockfd, NULL, 0, MSG_PEEK, NULL, NULL); //Gets length of message in socket buffer. MSG_PEEK specifies check socket buffer but leave it unread
 	if(bufferlen <0) {
 		fprintf(stderr, "Error receiving(peeking) message from server at the client, error number %d\n", errno);
 		exit(errno);
@@ -124,7 +125,8 @@ int main(int argc, char *argv[]){
 	}
 	char buffer[bufferlen+1]; //sets buffer size to exact length of message +1 char for null terminator
 	memset(buffer, 0, bufferlen+1); //init's the buffer
-	bufferlen = recvfrom(sockfd, buffer, bufferlen, 0, (struct sockaddr *) &clientAddr, (socklen_t *)&addrLen); //copies message into buffer
+	//bufferlen = recvfrom(sockfd, buffer, bufferlen, 0, (struct sockaddr *) &clientAddr, (socklen_t *)&addrLen); //copies message into buffer
+	bufferlen = recvfrom(sockfd, buffer, bufferlen, 0, NULL, NULL); //copies message into buffer
 
 	fprintf(stdout, "Server response: \n%s\n", buffer);
 

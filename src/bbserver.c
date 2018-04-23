@@ -71,22 +71,22 @@ int main(int argc, char *argv[]) {
 	serverAddr.sin_port = htons(port);
 
 
-	/*
+
 	//Start socketing process //NOT NEEDED FOR UNCONNECTED UDP
 	memset((char *) &serverAddr,0,sizeof(serverAddr));
 	port = atoi(argv[1]);
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_addr.s_addr = INADDR_ANY;
 	serverAddr.sin_port = htons(port);
-	*/
 
-	/*
+
+
 	//Check binding success //NOT NEEDED FOR UNCONNECTED UDP
 	if (bind(sockfd, (struct sockaddr *) &serverAddr,sizeof(serverAddr)) != 0) {//the socket, its cast, the size
 		fprintf(stderr,"Binding failed with error number %d\n", errno);
 		exit(errno);
 	}
-	*/
+
 
 	fprintf(stdout, "Waiting for client info\n");
 
@@ -119,8 +119,8 @@ void getClients(int sockfd, struct sockaddr_in serverAddr, client_t *clientList,
 		//memset(&fromaddr, 0, sizeof(fromaddr));
 		memset(buffer, 0, BUFFER_SIZE);
 		size_t addrLen = sizeof(serverAddr);
-		//int messagelen = recvfrom(sockfd, buffer, BUFFER_SIZE-1, 0, &fromaddr, (socklen_t *)(&sizeof(fromaddr))); //BUFFER_SIZE-1 so null term doesn't overflow buffer
-		int messagelen = recvfrom(sockfd, buffer, BUFFER_SIZE-1, 0, (struct sockaddr *) &serverAddr, (socklen_t *)&addrLen); //BUFFER_SIZE-1 so null term doesn't overflow buffer
+		int messagelen = recvfrom(sockfd, buffer, BUFFER_SIZE-1, 0, NULL, NULL); //BUFFER_SIZE-1 so null term doesn't overflow buffer
+		//int messagelen = recvfrom(sockfd, buffer, BUFFER_SIZE-1, 0, (struct sockaddr *) &serverAddr, (socklen_t *)&addrLen); //BUFFER_SIZE-1 so null term doesn't overflow buffer
 		if(messagelen <0) {
 			fprintf(stderr, "Error receiving message from client at the server, error number %d\n", errno);
 			exit(errno);
