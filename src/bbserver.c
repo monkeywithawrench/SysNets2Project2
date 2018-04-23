@@ -88,10 +88,14 @@ int main(int argc, char *argv[]) {
 	}
 	*/
 
+	fprintf(stdout, "Waiting for client info\n");
+
 	//get all client info
 	getClients(sockfd, serverAddr, clientList, numberOfClients);
 
 	//TODO possibly create a new bbfile to read/write to, or simply determine that it exists.
+
+	fprintf(stdout, "Sending client-neighbor info\n");
 
 	//send client-neighbor info
 	sendClients(sockfd, clientList, numberOfClients);
@@ -121,6 +125,7 @@ void getClients(int sockfd, struct sockaddr_in serverAddr, client_t *clientList,
 			fprintf(stderr, "Error receiving message from client at the server, error number %d\n", errno);
 			exit(errno);
 		}
+		fprintf(stdout, "Received client info\n");
 		//if we made it this far, no errors yet
 		char temp[strlen(buffer)+1]; //+1 for null term
 		strcpy(temp, buffer);

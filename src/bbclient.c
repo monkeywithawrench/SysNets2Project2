@@ -91,6 +91,8 @@ int main(int argc, char *argv[]){
 	}
 	*/ //TODO remove this
 
+	fprintf(stdout, "Sending client info to server\n");
+
 	char *joinRequest;
 	//Set up join request to send to server
 	asprintf(&joinRequest, "<join request>\n");
@@ -106,6 +108,8 @@ int main(int argc, char *argv[]){
 		fprintf(stderr,"sendto(server) failed with error number: %d\n", errno);
 		exit(errno);
 	}
+
+	fprintf(stdout, "Waiting for server response\n");
 
 	//Wait for and receive token
 	size_t addrLen = sizeof(clientAddr);
