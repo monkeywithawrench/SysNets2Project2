@@ -115,14 +115,11 @@ int main(int argc, char *argv[]) {
  */
 void getClients(int sockfd, struct sockaddr_in serverAddr, client_t *clientList, int numberOfClients) {
 	int i;
-	//struct sockaddr fromaddr;
+
 	char buffer[BUFFER_SIZE];
 	for(i=0; i<numberOfClients; i++) {
-		//memset(&fromaddr, 0, sizeof(fromaddr));
 		memset(buffer, 0, BUFFER_SIZE);
-		//size_t addrLen = sizeof(serverAddr); //SHOULDN'T BE NEEDED ANYMORE
 		int messagelen = recvfrom(sockfd, buffer, BUFFER_SIZE-1, 0, NULL, NULL); //BUFFER_SIZE-1 so null term doesn't overflow buffer
-		//int messagelen = recvfrom(sockfd, buffer, BUFFER_SIZE-1, 0, (struct sockaddr *) &serverAddr, (socklen_t *)&addrLen); //BUFFER_SIZE-1 so null term doesn't overflow buffer
 		if(messagelen <0) {
 			fprintf(stderr, "Error receiving message from client at the server, error number %d: ", errno);
 			perror("");
@@ -140,11 +137,6 @@ void getClients(int sockfd, struct sockaddr_in serverAddr, client_t *clientList,
 			exit(1);
 		}
 		if(strcmp(token, "<join request>")==0) {//if this is a join request
-			token = strtok(NULL, delim);  // every call with NULL uses saved user_input value and returns next substring
-			if(token==NULL) { //error checking
-				fprintf(stderr, "Message from client empty or incorrect format, not a join request!\n");
-				exit(1);
-			}
 			strncpy(delim, " ", 2);
 			token = strtok(NULL, delim); //ip from 2nd line
 			strcpy(clientList[i].hostname, token);

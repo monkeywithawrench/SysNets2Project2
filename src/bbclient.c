@@ -24,8 +24,8 @@
 //The client
 int main(int argc, char *argv[]){
 
-	struct sockaddr_in clientAddr;//IPV4 //TODO these probably aren't needed anymore
-	struct hostent *host;//store info of host  //TODO these probably aren't needed anymore
+	struct sockaddr_in clientAddr;//IPV4
+	struct hostent *host;//store info of host
 	int sockfd, clientPort, serverPort, n;
 	char filename[BUFFER_SIZE];
 	char hostname[BUFFER_SIZE];
@@ -67,32 +67,12 @@ int main(int argc, char *argv[]){
 	memmove((char*) &clientAddr.sin_addr.s_addr,(char*)host->h_addr,host->h_length);
 	clientAddr.sin_port = htons(clientPort);
 
-	/*
-	//Setting up server sockaddr_in //NOT NEEDED WITH sendMessage() FUNCTION!
-	memset((char *) &serverAddr,0,sizeof(serverAddr));
-	serverPort = atoi(argv[1]);
-	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_addr.s_addr = INADDR_ANY;
-	serverAddr.sin_port = htons(serverPort);
-	*/
-
-
 	//Check binding success //NOT NEEDED FOR UNCONNECTED UDP
 	if (bind(sockfd, (struct sockaddr *) &clientAddr,sizeof(clientAddr)) != 0) {//the socket, its cast, the size
 		fprintf(stderr,"Binding failed with error number %d: ", errno);
 		perror("");
 		exit(errno);
 	}
-
-
-	/*
-	//Check the connection //NOT NEEDED FOR UNCONNECTED UDP
-	int checkConnect = connect(sockfd,(struct sockaddr *)&server_address,sizeof(server_address));//(reference to socket by file descriptor,the specified address, address space of socket)
-	if (checkConnect < 0) {
-		fprintf(stderr,"Failed connection with error number: %d\n", errno);
-      		exit(errno);
-	}
-	*/ //TODO remove this
 
 	fprintf(stdout, "Sending client info to server\n");
 
@@ -103,9 +83,7 @@ int main(int argc, char *argv[]){
 	asprintf(&joinRequest, "%s%s\n", joinRequest, filename);
 	asprintf(&joinRequest, "%s</join request>\n", joinRequest);
 
-	//n = write(sockfd,joinRequest,strlen(joinRequest));//(reference to socket by file descriptor, the message written, write up to this length
-	//n = sendto(sockfd,joinRequest,strlen(joinRequest),0,(struct sockaddr *)&serverAddr,sizeof(serverAddr));//for more info, see https://beej.us/guide/bgnet/html/multi/sockaddr_inman.html
-	n = sendMessage(sockfd, hostname, serverPort, joinRequest); //MUCH shorter than above 2 lines!
+	n = sendMessage(sockfd, hostname, serverPort, joinRequest); //Sends message to server
 	//Check sendto success
 	if (n < 0){
 		fprintf(stderr,"sendto(server) failed with error number: %d: ", errno);
@@ -116,8 +94,6 @@ int main(int argc, char *argv[]){
 	fprintf(stdout, "Sent %d bytes, Waiting for server response\n", n);
 
 	//Wait for and receive token
-	//size_t addrLen = sizeof(clientAddr); //SHOULDN'T BE NEEDED ANYMORE
-	//int bufferlen = recvfrom(sockfd, NULL, 0, MSG_PEEK, (struct sockaddr *) &clientAddr, (socklen_t *)&addrLen); //Gets length of message in socket buffer. MSG_PEEK specifies check socket buffer but leave it unread
 	int bufferlen = recvfrom(sockfd, NULL, 0, MSG_PEEK, NULL, NULL); //Gets length of message in socket buffer. MSG_PEEK specifies check socket buffer but leave it unread
 	if(bufferlen <0) {
 		fprintf(stderr, "Error receiving(peeking) message from server at the client, error number %d: ", errno);
@@ -130,7 +106,6 @@ int main(int argc, char *argv[]){
 	}
 	char buffer[bufferlen+1]; //sets buffer size to exact length of message +1 char for null terminator
 	memset(buffer, 0, bufferlen+1); //init's the buffer
-	//bufferlen = recvfrom(sockfd, buffer, bufferlen, 0, (struct sockaddr *) &clientAddr, (socklen_t *)&addrLen); //copies message into buffer
 	bufferlen = recvfrom(sockfd, buffer, bufferlen, 0, NULL, NULL); //copies message into buffer
 
 	fprintf(stdout, "Server response: \n%s\n", buffer);
