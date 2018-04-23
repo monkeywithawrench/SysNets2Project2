@@ -97,16 +97,15 @@ int main(int argc, char *argv[]){
 	while(1 == 1) {
 
 		//Wait for and receive token
+		/* MSG_PEEK stopped working :|
 		int bufferlen = recvfrom(sockfd, NULL, 0, MSG_PEEK, NULL, NULL); //Gets length of message in socket buffer. MSG_PEEK specifies check socket buffer but leave it unread
 		if(bufferlen <0) {
 			fprintf(stderr, "Error receiving(peeking) message from server at the client, error number %d: ", errno);
 			perror("");
 			exit(errno);
 		}
-		if(bufferlen<1) {
-			fprintf(stderr, "Client received empty message from server!\n");
-			exit(0);
-		}
+		*/
+		int bufferlen = 999; //arbitrary, but large enough
 		char buffer[bufferlen+1]; //sets buffer size to exact length of message +1 char for null terminator
 		memset(buffer, 0, bufferlen+1); //init's the buffer
 		bufferlen = recvfrom(sockfd, buffer, bufferlen, 0, NULL, NULL); //copies message into buffer
@@ -123,7 +122,7 @@ int main(int argc, char *argv[]){
 			fprintf(stderr, "Token empty or incorrect format!\n");
 			exit(1);
 		}
-		if(strcmp(token, "<tokent>")==0) {	//if this is a token
+		if(strcmp(token, "<token>")==0) {	//if this is a token
 			client_t clientNeighbor;
 			token = strtok(NULL, delim); 	//This line is number of clients!
 			//TODO CHECK IF CLIENT WANTS TO EXIT. IF SO, -- THIS NUMBER!!!
@@ -153,6 +152,19 @@ int main(int argc, char *argv[]){
 			asprintf(&tokenMessage, "%s%s %d\n", tokenMessage, hostname, clientPort);
 			asprintf(&tokenMessage, "%s</token>\n",tokenMessage);
 			//TOKEN MESSAGE COMPLETE!
+
+			n = sendMessage(sockfd, clientNeighbor.hostname, clientNeighbor.port, tokenMessage); //Sends message to server
+				//Check sendto success
+			if (n < 0){
+				fprintf(stderr,"sendto(neighbor) failed with error number: %d: ", errno);
+				perror("");
+				exit(errno);
+			}
+
+			fprintf(stdout, "Sent %d bytes, Waiting for next token\n", n);
+		}
+		else {
+
 		}
 
 		//TODO CHECK IF JOIN REQUEST!!!!!
