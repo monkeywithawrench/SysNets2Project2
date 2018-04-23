@@ -146,7 +146,7 @@ void getClients(int sockfd, struct sockaddr_in serverAddr, client_t *clientList,
 				exit(1);
 			}
 			strncpy(delim, " ", 2);
-			token = strtok(temp, delim); //ip from 2nd line
+			token = strtok(NULL, delim); //ip from 2nd line
 			strcpy(clientList[i].hostname, token);
 			token = strtok(NULL, delim); //get port# from 2nd line
 			clientList[i].port = atoi(token);
