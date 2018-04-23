@@ -174,7 +174,8 @@ void sendClients(int sockfd, client_t *clientList, int numberOfClients) {
 	int n = sendMessage(sockfd, clientList[0].hostname, clientList[0].port, response);
 	//Check for send success
 	if (n < 0){
-		fprintf(stderr,"sendto(server) failed with error number: %d\n", errno);
+		//fprintf(stderr,"sendto(server) failed with error number: %d\n", errno);
+		perror("sendto(server) failed");
 		exit(errno);
 	}
 }
