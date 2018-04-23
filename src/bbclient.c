@@ -110,34 +110,31 @@ int main(int argc, char *argv[]){
 		memset(buffer, 0, bufferlen+1); //init's the buffer
 		bufferlen = recvfrom(sockfd, buffer, bufferlen, 0, NULL, NULL); //copies message into buffer
 
-		fprintf(stdout, "Server response: \n%s\n", buffer);
-
 		//Save a copy of buffer, we're about to mutilate this string lol
 		char temp[strlen(buffer)+1]; //+1 for null term
-		strcpy(temp, buffer);
+		strncpy(temp, buffer, strlen(buffer)+1);
 		char *token;
 		char delim[2] = "\n";
-		token = strtok(temp, delim);  // first call returns pointer to first part of user_input separated by delim
+		char *saveptr = temp; //THIS IS NEEDED SO STRTOK DOESN'T GET CONFUSED!
+		token = strtok_r(temp, delim, &saveptr);  // first call returns pointer to first part of user_input separated by delim
 		if(token==NULL) { //error checking
 			fprintf(stderr, "Token empty or incorrect format!\n");
 			exit(1);
 		}
 		if(strcmp(token, "<token>")==0) {	//if this is a token
 			client_t clientNeighbor;
-			token = strtok(NULL, delim); 	//This line is number of clients!
+			token = strtok_r(NULL, delim, &saveptr); 	//This line is number of clients!
 			//TODO CHECK IF CLIENT WANTS TO EXIT. IF SO, -- THIS NUMBER!!!
 			int numberOfClients = atoi(token);
 			if(numberOfClients <= 1) {
 				fprintf(stdout, "Client is only client left in ring, exiting!");
 				exit(0);
 			}
-			token = strtok(NULL, delim); 	//Skip this line, it's this client's IP and port
-			strncpy(delim, " ", 2);
-			token = strtok(NULL, delim); //IP and port of neighbor client
-			strcpy(clientNeighbor.hostname, token);
-			token = strtok(NULL, delim); //get port# from 2nd line
-			clientNeighbor.port = atoi(token);
-			strncpy(delim, "\n", 2); //reverting back to line at a time
+			token = strtok_r(NULL, delim, &saveptr); 	//Skip this line, it's this client's IP and port
+			token = strtok_r(NULL, delim, &saveptr); //IP and port of neighbor client
+			char temp2[BUFFER_SIZE];
+			strncpy(temp2, token, BUFFER_SIZE);
+			clientNeighbor = string2client_t(temp2, BUFFER_SIZE);
 
 			//Set up token to send to neighbor client
 			char *tokenMessage;
@@ -146,13 +143,14 @@ int main(int argc, char *argv[]){
 			asprintf(&tokenMessage, "%s%s %d\n", tokenMessage, clientNeighbor.hostname, clientNeighbor.port);
 			int i;
 			for (i=0; i<numberOfClients-2; i++) {//minus 2 because next client is already in list, and last client will be added separately
-				token = strtok(NULL, delim);
+				token = strtok_r(NULL, delim, &saveptr);
 				asprintf(&tokenMessage, "%s%s\n", tokenMessage, token);
 			}
 			asprintf(&tokenMessage, "%s%s %d\n", tokenMessage, hostname, clientPort);
 			asprintf(&tokenMessage, "%s</token>\n",tokenMessage);
 			//TOKEN MESSAGE COMPLETE!
 
+			fprintf(stdout, "\n\n%s\n", tokenMessage);
 			n = sendMessage(sockfd, clientNeighbor.hostname, clientNeighbor.port, tokenMessage); //Sends message to server
 				//Check sendto success
 			if (n < 0){
@@ -161,12 +159,12 @@ int main(int argc, char *argv[]){
 				exit(errno);
 			}
 
-			fprintf(stdout, "Sent %d bytes, Waiting for next token\n", n);
+			fprintf(stdout, "Sent %d bytes to %s %d, Waiting for next token\n", n, clientNeighbor.hostname, clientNeighbor.port);
 		}
 		else {
 
 		}
-
+		//exit(0);
 		//TODO CHECK IF JOIN REQUEST!!!!!
 
 	}
