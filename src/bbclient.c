@@ -49,7 +49,7 @@ int main(int argc, char *argv[]){
 	host = gethostbyname(hostname);//server name, return hostent
 	if (host == NULL){
 		fprintf(stderr,"Hostname passed does not exist, errno: %d: ", errno);
-		perror();
+		perror("");
 		exit(0);
 	}
 
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]){
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0); //return file descriptor, else -1 //was SOCK_STREAM
 	if (sockfd < 0 ){
 		fprintf(stderr,"Getting sockfd from socket() failed, error number %d: ", errno);
-		perror();
+		perror("");
 		exit(errno);
 	}
 
@@ -80,7 +80,7 @@ int main(int argc, char *argv[]){
 	//Check binding success //NOT NEEDED FOR UNCONNECTED UDP
 	if (bind(sockfd, (struct sockaddr *) &clientAddr,sizeof(clientAddr)) != 0) {//the socket, its cast, the size
 		fprintf(stderr,"Binding failed with error number %d: ", errno);
-		perror();
+		perror("");
 		exit(errno);
 	}
 
@@ -109,7 +109,7 @@ int main(int argc, char *argv[]){
 	//Check sendto success
 	if (n < 0){
 		fprintf(stderr,"sendto(server) failed with error number: %d: ", errno);
-		perror();
+		perror("");
 		exit(errno);
 	}
 
@@ -121,7 +121,7 @@ int main(int argc, char *argv[]){
 	int bufferlen = recvfrom(sockfd, NULL, 0, MSG_PEEK, NULL, NULL); //Gets length of message in socket buffer. MSG_PEEK specifies check socket buffer but leave it unread
 	if(bufferlen <0) {
 		fprintf(stderr, "Error receiving(peeking) message from server at the client, error number %d: ", errno);
-		perror();
+		perror("");
 		exit(errno);
 	}
 	if(bufferlen<1) {
