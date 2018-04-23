@@ -37,3 +37,26 @@ int sendMessage(int sockfd, char *hostname, int port, char *message) {
 	int n = sendto(sockfd,message,strlen(message),0,(struct sockaddr *)&destinationAddr,(socklen_t)addrLen);//for more info, see https://beej.us/guide/bgnet/html/multi/sockaddr_inman.html
 	return(n);
 }
+
+
+/** Converts a string of format "hostname port" to a client_t struct
+ *
+ * @param string the hostname port string to convert
+ * @param strlen the length of the string
+ * @return client_t struct with hostname and port specified
+ */
+client_t string2client_t(char *string, int strlen) {
+	char *token; //Token pointer from strtok_r
+	char temp[strlen+1];
+	char *saveptr = temp; //THIS IS NEEDED SO STRTOK DOESN'T GET CONFUSED!
+	strncpy(temp, string, strlen+1);
+	char delim[2] = " ";
+	client_t client;
+	token = strtok_r(temp, delim, &saveptr); //gets the hostname
+	strcpy(client.hostname, token); //Sets the client IP/hostname
+	token = strtok_r(NULL, delim, &saveptr); //gets the port number
+	client.port = atoi(token);
+	return(client);
+}
+
+

@@ -32,4 +32,11 @@ typedef struct
 int sendMessage(int sockfd, char *hostname, int port, char *message);
 
 
+/** Converts a string of format "hostname port" to a client_t struct
+ *
+ * @param string the hostname port string to convert
+ * @param strlen the length of the string
+ * @return client_t struct with hostname and port specified
+ */
+client_t string2client_t(char *string, int strlen);
 
