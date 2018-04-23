@@ -120,7 +120,7 @@ void getClients(int sockfd, struct sockaddr_in serverAddr, client_t *clientList,
 	for(i=0; i<numberOfClients; i++) {
 		//memset(&fromaddr, 0, sizeof(fromaddr));
 		memset(buffer, 0, BUFFER_SIZE);
-		size_t addrLen = sizeof(serverAddr);
+		//size_t addrLen = sizeof(serverAddr); //SHOULDN'T BE NEEDED ANYMORE
 		int messagelen = recvfrom(sockfd, buffer, BUFFER_SIZE-1, 0, NULL, NULL); //BUFFER_SIZE-1 so null term doesn't overflow buffer
 		//int messagelen = recvfrom(sockfd, buffer, BUFFER_SIZE-1, 0, (struct sockaddr *) &serverAddr, (socklen_t *)&addrLen); //BUFFER_SIZE-1 so null term doesn't overflow buffer
 		if(messagelen <0) {

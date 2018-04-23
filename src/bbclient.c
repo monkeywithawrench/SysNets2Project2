@@ -116,7 +116,7 @@ int main(int argc, char *argv[]){
 	fprintf(stdout, "Sent %d bytes, Waiting for server response\n", n);
 
 	//Wait for and receive token
-	size_t addrLen = sizeof(clientAddr);
+	//size_t addrLen = sizeof(clientAddr); //SHOULDN'T BE NEEDED ANYMORE
 	//int bufferlen = recvfrom(sockfd, NULL, 0, MSG_PEEK, (struct sockaddr *) &clientAddr, (socklen_t *)&addrLen); //Gets length of message in socket buffer. MSG_PEEK specifies check socket buffer but leave it unread
 	int bufferlen = recvfrom(sockfd, NULL, 0, MSG_PEEK, NULL, NULL); //Gets length of message in socket buffer. MSG_PEEK specifies check socket buffer but leave it unread
 	if(bufferlen <0) {
