@@ -109,7 +109,7 @@ int main(int argc, char *argv[]){
 		exit(errno);
 	}
 
-	fprintf(stdout, "Waiting for server response\n");
+	fprintf(stdout, "Sent %d bytes, Waiting for server response\n", n);
 
 	//Wait for and receive token
 	size_t addrLen = sizeof(clientAddr);
