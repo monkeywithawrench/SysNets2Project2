@@ -167,6 +167,11 @@ int main(int argc, char *argv[]){
 			//TOKEN MESSAGE COMPLETE!
 
 			fprintf(stdout, "\n\n%s\n", tokenMessage);
+			if(isJoinRequest) {
+				strncpy(clientNeighbor.hostname, newClient.hostname, BUFFER_SIZE);
+				clientNeighbor.port = newClient.port;
+				isJoinRequest = 0; //RESET JOIN REQUEST STATUS
+			}
 			n = sendMessage(sockfd, clientNeighbor.hostname, clientNeighbor.port, tokenMessage); //Sends message to server
 				//Check sendto success
 			if (n < 0){
@@ -176,8 +181,6 @@ int main(int argc, char *argv[]){
 			}
 
 			fprintf(stdout, "Sent %d bytes to %s %d, Waiting for next token\n", n, clientNeighbor.hostname, clientNeighbor.port);
-			if(isJoinRequest)
-				exit(0);
 
 		}
 		else {
