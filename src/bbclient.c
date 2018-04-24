@@ -25,11 +25,25 @@
 #include "bbutils.h"
 //int iterate = 0;//global variable, message number for bulletin board //Doesn't need to be here, only used by IO thread
 
+/** Struct typedef containing all needed parameters for userIO(void *), which takes a single arg of type (void *)
+ *
+ * @var filename Pointer to filename of the bbfile
+ * @var exitRequestMutexPtr Pointer to mutex to lock and unlock isExitRequest in main
+ * @var isExitRequestPtr Pointer to isExitRequest in main. isExitRequest is usually 0, set to 1 to exit the token ring
+ */
 typedef struct {
-	char filename[BUFFER_SIZE];
-	int *isExitRequestPtr; //0 normally, only 1 when client wants to exit ring
+	char *filename;
 	pthread_mutex_t *exitRequestMutexPtr; //Mutex for isExitRequest
+	int *isExitRequestPtr; //0 normally, only 1 when client wants to exit ring
 }userIO_t;
+
+/** This function will be launched from main via a pthread_create call. As such, it takes (void *ptr) and returns (void *ptr)
+ * This function is responsible for interacting with the user at the command line.
+ * It will prompt the user for input on what the program should do
+ *
+ * @param arg the void * pointer to the arguments/parameters for this function.
+ */
+void * userIO(void *arg);
 
 //The client
 int main(int argc, char *argv[]){
@@ -105,14 +119,14 @@ int main(int argc, char *argv[]){
 		exit(errno);
 	}
 
-	printf("Sent %d bytes, Waiting for server response\n", n);
-	printf(stdout, "Launching userIO thread.\n");
+	fprintf(stdout, "Sent %d bytes, Waiting for server response\n", n);
+	fprintf(stdout, "Launching userIO thread.\n");
 
 	pthread_t userIOthread;	//New thread
 	userIO_t userIOparams;	//Params struct of type userIO_t for thread function
-	userIOparams->filename = filename;
-	userIOparams->exitRequestMutexPtr = &exitRequestMutex;	//Address of exitRequestMutex
-	userIOparams->isExitRequestPtr = &isExitRequest;		//Address of isExitRequest
+	userIOparams.filename = filename;
+	userIOparams.exitRequestMutexPtr = &exitRequestMutex;	//Address of exitRequestMutex
+	userIOparams.isExitRequestPtr = &isExitRequest;		//Address of isExitRequest
 	errno = pthread_create(&userIOthread, NULL, userIO, &userIOparams);
 	if(errno) {
 		fprintf(stderr, "Error creating pthread for userIO function! errno: %d: ", errno);
