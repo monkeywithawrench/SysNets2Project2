@@ -93,6 +93,9 @@ int main(int argc, char *argv[]){
 
 	fprintf(stdout, "Sent %d bytes, Waiting for server response\n", n);
 
+	client_t newClient; //If a new client is joining, store it's info here
+	int isJoinRequest = 0; //1 if there is a pending join request, else false
+
 	//START PASSING TOKEN!
 	while(1 == 1) {
 
@@ -121,7 +124,14 @@ int main(int argc, char *argv[]){
 			fprintf(stderr, "Token empty or incorrect format!\n");
 			exit(1);
 		}
-		if(strcmp(token, "<token>")==0) {	//if this is a token
+		if(strcmp(token, "<join request>")==0) {	//if this is a join request
+			isJoinRequest = 1;
+			token = strtok_r(NULL, delim, &saveptr);
+			char temp2[BUFFER_SIZE];
+			strncpy(temp2, token, BUFFER_SIZE);
+			newClient = string2client_t(temp2, BUFFER_SIZE);
+		}
+		else if(strcmp(token, "<token>")==0) {	//if this is a token
 			client_t clientNeighbor;
 			token = strtok_r(NULL, delim, &saveptr); 	//This line is number of clients!
 			//TODO CHECK IF CLIENT WANTS TO EXIT. IF SO, -- THIS NUMBER!!!
@@ -139,7 +149,13 @@ int main(int argc, char *argv[]){
 			//Set up token to send to neighbor client
 			char *tokenMessage;
 			asprintf(&tokenMessage, "<token>\n");
-			asprintf(&tokenMessage, "%s%d\n", tokenMessage, numberOfClients);
+			if(isJoinRequest) {
+				numberOfClients++;
+				asprintf(&tokenMessage, "%s%d\n", tokenMessage, numberOfClients);
+				asprintf(&tokenMessage, "%s%s %d\n", tokenMessage, newClient.hostname, newClient.port); //Joining client added to ring after this client
+				isJoinRequest = 0; //RESET JOIN REQUEST STATUS
+			} else
+				asprintf(&tokenMessage, "%s%d\n", tokenMessage, numberOfClients);
 			asprintf(&tokenMessage, "%s%s %d\n", tokenMessage, clientNeighbor.hostname, clientNeighbor.port);
 			int i;
 			for (i=0; i<numberOfClients-2; i++) {//minus 2 because next client is already in list, and last client will be added separately
