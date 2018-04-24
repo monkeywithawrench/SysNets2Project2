@@ -18,6 +18,7 @@
 #include <netdb.h>          //Definitions for network's functions
 #include <unistd.h>			//Needed for read() and write()
 #include <errno.h>			//Used for accessing errno, an int variable set by some system calls and library functions to an error number
+#include <pthread.h>		//Needed for mutex and pthread_create
 
 #include "bbutils.h"
 
@@ -29,6 +30,10 @@ int main(int argc, char *argv[]){
 	int sockfd, clientPort, serverPort, n;
 	char filename[BUFFER_SIZE];
 	char hostname[BUFFER_SIZE];
+
+	int isJoinRequest = 0; //1 if there is a pending join request, else 0
+	int isExitRequest = 0; //0 normally, only 1 when client wants to exit ring
+	pthread_mutex_t exitRequestMutex; //Mutex for isExitRequest
 
 	//init our strings
 	memset(filename, 0, BUFFER_SIZE);
@@ -94,7 +99,6 @@ int main(int argc, char *argv[]){
 	fprintf(stdout, "Sent %d bytes, Waiting for server response\n", n);
 
 	client_t newClient; //If a new client is joining, store it's info here
-	int isJoinRequest = 0; //1 if there is a pending join request, else false
 
 	//START PASSING TOKEN!
 	while(1 == 1) {
@@ -137,7 +141,19 @@ int main(int argc, char *argv[]){
 			token = strtok_r(NULL, delim, &saveptr); 	//This line is number of clients!
 			//TODO CHECK IF CLIENT WANTS TO EXIT. IF SO, -- THIS NUMBER!!!
 			int numberOfClients = atoi(token);
-			if(numberOfClients <= 1) {
+			int futureNumberOfClients = numberOfClients;
+			int tempExitStatus; //will hold the current value of isExitRequest until next iteration
+			if(isJoinRequest)
+				futureNumberOfClients++; //if join request, increase number of clients in the token we're creating
+
+			pthread_mutex_lock(&exitRequestMutex); //Lock mutex around isExitRequest. Avoids race condition
+			tempExitStatus = isExitRequest;; //Saves a copy of this var. Safe until next receipt of token.
+			pthread_mutex_unlock(&exitRequestMutex); //Unlocks mutex around isExitRequest
+
+			if(tempExitStatus)
+				futureNumberOfClients--; //if client is exiting, decrease the number of future clients
+
+			if(futureNumberOfClients <= 1) {
 				fprintf(stdout, "Client is only client left in ring, exiting!");
 				exit(0);
 			}
@@ -150,19 +166,17 @@ int main(int argc, char *argv[]){
 			//Set up token to send to neighbor client
 			char *tokenMessage;
 			asprintf(&tokenMessage, "<token>\n");
-			if(isJoinRequest) {
-				asprintf(&tokenMessage, "%s%d\n", tokenMessage, numberOfClients+1); //+1 for new client!
+			asprintf(&tokenMessage, "%s%d\n", tokenMessage, futureNumberOfClients);
+			if(isJoinRequest)
 				asprintf(&tokenMessage, "%s%s %d\n", tokenMessage, newClient.hostname, newClient.port); //Joining client added to ring after this client
-				//isJoinRequest = 0; //RESET JOIN REQUEST STATUS
-			} else
-				asprintf(&tokenMessage, "%s%d\n", tokenMessage, numberOfClients);
 			asprintf(&tokenMessage, "%s%s %d\n", tokenMessage, clientNeighbor.hostname, clientNeighbor.port);
 			int i;
 			for (i=0; i<numberOfClients-2; i++) {//minus 2 because next client is already in list, and last client will be added separately
 				token = strtok_r(NULL, delim, &saveptr);
 				asprintf(&tokenMessage, "%s%s\n", tokenMessage, token);
 			}
-			asprintf(&tokenMessage, "%s%s %d\n", tokenMessage, hostname, clientPort);
+			if(tempExitStatus == 0) //If client is NOT exiting, append client info to end of token routing table
+				asprintf(&tokenMessage, "%s%s %d\n", tokenMessage, hostname, clientPort);
 			asprintf(&tokenMessage, "%s</token>\n",tokenMessage);
 			//TOKEN MESSAGE COMPLETE!
 
@@ -180,8 +194,12 @@ int main(int argc, char *argv[]){
 				exit(errno);
 			}
 
-			fprintf(stdout, "Sent %d bytes to %s %d, Waiting for next token\n", n, clientNeighbor.hostname, clientNeighbor.port);
-
+			if(tempExitStatus) {
+				fprintf(stdout, "Sent %d bytes to %s %d. Client requested to exit\n", n, clientNeighbor.hostname, clientNeighbor.port);
+				fprintf(stdout, "Client has been removed from the ring. Exiting.");
+				exit(0);
+			}
+			fprintf(stdout, "Sent %d bytes to %s %d, Waiting for next token\n", n, clientNeighbor.hostname, clientNeighbor.port); //if above statement passed, this won't be reached
 		}
 		else {
 
