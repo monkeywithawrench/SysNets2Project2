@@ -1,11 +1,13 @@
 /*************************************************************** 
  * Student Name: Jeff Morton
+ * Student Name: Thanh Tran
  * File Name: bbutils.h
  * Assignment Number: 
  * Date Due: Apr 16, 2018
  * 
  *  Created on: Apr 16, 2018
  *      Author: Jeff Morton
+ *      Author: Thanh Tran
  ***************************************************************/
 
 
@@ -39,4 +41,20 @@ int sendMessage(int sockfd, char *hostname, int port, char *message);
  * @return client_t struct with hostname and port specified
  */
 client_t string2client_t(char *string, int strlen);
+/**Open up the filename for read operation and
+ * search for the requested message to display to the console
+ *
+ * @param filename the name of the bulletin board text file 
+ * @param msgNum the requested message 
+ */
+void readFile(char*filename,int msgNum);
+
+/**Open up the filename for write operation and
+ * write it in the specified format
+ *
+ * @param filename the name of the bulletin board text file 
+ * @param msgNum the message number 
+ */
+void writeFile(char*filename,int  msgNum);
+
 
