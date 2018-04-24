@@ -10,7 +10,7 @@ bbserver: bbserver.c bbutils.c bbutils.h
 	$(CC) -o bbserver bbserver.c bbutils.c bbutils.h $(CFLAGS)
 
 bbclient: bbclient.c bbutils.c bbutils.h
-	$(CC) -o bbclient bbclient.c bbutils.c bbutils.h $(CFLAGS)
+	$(CC) -o bbclient bbclient.c bbutils.c bbutils.h $(CFLAGS) -lpthread
 
 .PHONY : clean
 clean:
