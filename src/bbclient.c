@@ -150,8 +150,7 @@ int main(int argc, char *argv[]){
 			char *tokenMessage;
 			asprintf(&tokenMessage, "<token>\n");
 			if(isJoinRequest) {
-				numberOfClients++;
-				asprintf(&tokenMessage, "%s%d\n", tokenMessage, numberOfClients);
+				asprintf(&tokenMessage, "%s%d\n", tokenMessage, numberOfClients+1); //+1 for new client!
 				asprintf(&tokenMessage, "%s%s %d\n", tokenMessage, newClient.hostname, newClient.port); //Joining client added to ring after this client
 				isJoinRequest = 0; //RESET JOIN REQUEST STATUS
 			} else
