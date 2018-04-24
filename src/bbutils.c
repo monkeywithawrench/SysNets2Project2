@@ -58,5 +58,59 @@ client_t string2client_t(char *string, int strlen) {
 	client.port = atoi(token);
 	return(client);
 }
+/**Open up the filename for read operation and
+ * search for the requested message to display to the console
+ *
+ * @param filename the name of the bulletin board text file 
+ * @param msgNum the requested message 
+ */
+void readFile(char*filename,int msgNum){
+   
+   FILE *fp = fopen(filename, "r");
+   char match[BUFFER_SIZE];//the message number that'll be search
+   char buff[BUFFER_SIZE];//file read goes into this buffer
+   if (fp == NULL) {
+  	 fprintf(stderr, "\nOops, '%s' could not open for read.\n",filename);
+  	 exit(1);
+   }
+   sprintf(match,"<message n=%d>\n",msgNum);//set text w/ iterated number like in a printf format to this string
+   while(fgets (buff, BUFFER_SIZE, fp)!=NULL){//look through the whole file
+        if(strcmp(buff, match) == 0){
+		printf("%s", buff );
+		while(strcmp(fgets (buff, BUFFER_SIZE, fp),"</message>\n") != 0){//print out the matching message
+			printf("%s", buff );
+		}
+	}
+   }
+   fclose(fp);
+}
+/**Open up the filename for write operation and
+ * write it in the specified format
+ *
+ * @param filename the name of the bulletin board text file 
+ * @param msgNum the message number 
+ */
+void writeFile(char*filename,int msgNum){
+	
+   FILE *fp = fopen(filename, "a+");
+   char header[BUFFER_SIZE];
+   char footer[BUFFER_SIZE];
+   char str[BUFFER_SIZE];
+
+   sprintf(header,"<message n=%d>\n",msgNum);//set text w/ iterated number like in a printf format to this string
+   sprintf(footer,"</message>\n");
+   
+   printf( "Enter a string-->");
+   fgets(str,sizeof(str),stdin);//get user input string
+   if(fp == NULL) {//checks file can open
+      fprintf(stderr, "\nOops, '%s' could not open for write.\n",filename);
+      exit(1);
+   }
+   fputs(header,fp);
+   fputs(str,fp);//write/append to file
+   fputs(footer,fp);
+   fclose(fp);
+   
+}
 
 
