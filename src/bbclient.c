@@ -1,11 +1,13 @@
 /*************************************************************** 
  * Student Name: Jeff Morton
+ * Student Name: Thanh Tran
  * File Name: bbclient.c
  * Assignment Number: 
  * Date Due: Apr 15, 2018
  * 
  *  Created on: Apr 15, 2018
  *      Author: Jeff Morton
+ *      Author: Thanh Tran
  ***************************************************************/
 #define _GNU_SOURCE			//Need this for asprintf(), otherwise we get implicit declaration
 #include <stdio.h>          //Standard IO
@@ -21,7 +23,7 @@
 #include <pthread.h>		//Needed for mutex and pthread_create
 
 #include "bbutils.h"
-
+int iterate = 0;//global variable, message number for bulletin board
 //The client
 int main(int argc, char *argv[]){
 
@@ -210,10 +212,43 @@ int main(int argc, char *argv[]){
 	}
 
 	//TODO remember to open the bbfile with mode a+ ( fopen("a.txt", "a+") )
-
-
-
-
-
+	//***new***
+	int loop = 0,sequence = 0;
+	char choice;
+	
+	while(loop == 0){
+		printf( "\n-->Enter w for Write operation!! Appends a new message to the end of the message board\n");
+		printf( "-->Enter r for Read operation!! Read a particular message from the message board using a message sequence number. # is the sequence number of the message on the board. \n");
+		printf( "-->Enter l for List operation!! Displays the range of valid sequence numbers of messages posted to the board. \n");
+		printf( "-->Enter e for Exit operation!! Closes the message board. Exit requires that the user leaves the logical token ring.\n\n");
+		printf( "I choose-->");
+       		scanf(" %c", &choice);//get the user choice
+		getchar();//handles the newline that remains in the buffer cause of scanf()
+		//printf("|%c|",choice);
+		switch(choice) {
+        		case 'w' :
+			writeFile(filename, iterate);
+			printf("Okay, writing to the file.\n" );
+			iterate++;//increment the message number
+        		break;
+        		case 'r' :
+			printf("Which message number do you want to read?");
+			scanf(" %d", &sequence);
+			printf("Users wanted to read message %d\n",sequence);
+			getchar();
+        		readFile(filename,sequence);
+        		break;
+        		case 'l' :
+       			 printf("Sequence number ranges from 0 to %d\n" ,iterate);
+        		break;
+        		case 'e' :
+        		printf("Exiting now, token is release.\n" );
+			loop = 1;//escape out of the while loop
+        		break;
+        		default :
+        		printf("Please choose the correct option!!!\n" );
+   		}	
+	}
+	//***new***
 	return(0);
 }
