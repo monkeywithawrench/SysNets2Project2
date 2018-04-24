@@ -23,7 +23,14 @@
 #include <pthread.h>		//Needed for mutex and pthread_create
 
 #include "bbutils.h"
-int iterate = 0;//global variable, message number for bulletin board
+//int iterate = 0;//global variable, message number for bulletin board //Doesn't need to be here, only used by IO thread
+
+typedef struct {
+	char filename[BUFFER_SIZE];
+	int *isExitRequestPtr; //0 normally, only 1 when client wants to exit ring
+	pthread_mutex_t *exitRequestMutexPtr; //Mutex for isExitRequest
+}userIO_t;
+
 //The client
 int main(int argc, char *argv[]){
 
@@ -98,7 +105,24 @@ int main(int argc, char *argv[]){
 		exit(errno);
 	}
 
-	fprintf(stdout, "Sent %d bytes, Waiting for server response\n", n);
+	printf("Sent %d bytes, Waiting for server response\n", n);
+	printf(stdout, "Launching userIO thread.\n");
+
+	pthread_t userIOthread;	//New thread
+	userIO_t userIOparams;	//Params struct of type userIO_t for thread function
+	userIOparams->filename = filename;
+	userIOparams->exitRequestMutexPtr = &exitRequestMutex;	//Address of exitRequestMutex
+	userIOparams->isExitRequestPtr = &isExitRequest;		//Address of isExitRequest
+	errno = pthread_create(&userIOthread, NULL, userIO, &userIOparams);
+	if(errno) {
+		fprintf(stderr, "Error creating pthread for userIO function! errno: %d: ", errno);
+		perror("");
+		pthread_mutex_lock(&exitRequestMutex); //Lock mutex around isExitRequest. Avoids race condition
+		isExitRequest = 1; //Specifies that this client is exiting. This will perform a graceful exit, leaving the token ring intact!
+		pthread_mutex_unlock(&exitRequestMutex); //Unlocks mutex around isExitRequest
+		fprintf(stderr,"\nCritical thread failure, requesting to exit the ring...\n");
+	}
+
 
 	client_t newClient; //If a new client is joining, store it's info here
 
@@ -200,6 +224,11 @@ int main(int argc, char *argv[]){
 			if(tempExitStatus) {
 				fprintf(stdout, "Sent %d bytes to %s %d. Client requested to exit\n", n, clientNeighbor.hostname, clientNeighbor.port);
 				fprintf(stdout, "Client has been removed from the ring. Exiting.");
+				errno = pthread_join(userIOthread, NULL);
+				if(errno) {
+					fprintf(stderr,"Failure joining userIO thread back into main thread. Errno: %d ", errno);
+					perror("");
+				}
 				exit(0);
 			}
 			fprintf(stdout, "Sent %d bytes to %s %d, Waiting for next token\n", n, clientNeighbor.hostname, clientNeighbor.port); //if above statement passed, this won't be reached
@@ -211,9 +240,26 @@ int main(int argc, char *argv[]){
 
 	}
 
+}
+
+
+/** This function will be launched from main via a pthread_create call. As such, it takes (void *ptr) and returns (void *ptr)
+ * This function is responsible for interacting with the user at the command line.
+ * It will prompt the user for input on what the program should do
+ *
+ * @param arg the void * pointer to the arguments/parameters for this function.
+ */
+void * userIO(void *arg) {
 	//TODO remember to open the bbfile with mode a+ ( fopen("a.txt", "a+") )
 	//***new***
-	int loop = 0,sequence = 0;
+	userIO_t *parameters = (userIO_t *)arg; //cast our arg pointer to type userIO_t, a struct containing our params for this function
+	char *filename = parameters->filename;
+	//pthread_mutex_t *exitRequestMutex = parameters->exitRequestMutexPtr;
+	//int *isExitRequest = parameters->isExitRequestPtr; //0 normally, only 1 when client wants to exit ring
+
+	int iterate = 0;	//iterate Message number of the latest message in bulletin board, also the number of messages in bb
+	int loop = 0;
+	int sequence = 0;	//sequence Variable, this is message number the user would like to read
 	char choice;
 
 	while(loop == 0){
@@ -242,13 +288,21 @@ int main(int argc, char *argv[]){
 			printf("Sequence number ranges from 0 to %d\n" ,iterate);
 			break;
 		case 'e' :
-			printf("Exiting now, token is release.\n" );
-			loop = 1;//escape out of the while loop
+			printf("Requesting to exit.\n");
+			//printf("Exiting now, token is release.\n" );
+			pthread_mutex_lock(parameters->exitRequestMutexPtr); //lock mutex for isExitRequest;
+			*(parameters->isExitRequestPtr) = 1; //set isExitRequest to 1, signaling our desire to exit
+			pthread_mutex_unlock(parameters->exitRequestMutexPtr); //unlock mutex for isExitRequest;
+			return(NULL); //exit IO thread
+			loop = 1;//escape out of the while loop //this should never run lol
+
 			break;
 		default :
 			printf("Please choose the correct option!!!\n" );
 		}
 	}
+	//if we got here, something went wrong...
+	fprintf(stderr, "Warning: userIO thread might not have exited correctly.\n"); //REALLY should never make it this far. I want to know if it does
 	//***new***
-	return(0);
+	return(NULL);
 }
