@@ -1,11 +1,13 @@
 /*************************************************************** 
  * Student Name: Jeff Morton
+ * Student Name: Thanh Tran
  * File Name: bbserver.c
  * Assignment Number: 
  * Date Due: Apr 15, 2018
  * 
  *  Created on: Apr 15, 2018
  *      Author: Jeff Morton
+ *      Author: Thanh Tran
  ***************************************************************/
 #define _GNU_SOURCE			//Need this for asprintf(), otherwise we get implicit declaration
 #include <stdio.h>          //Standard IO

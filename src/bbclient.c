@@ -141,7 +141,8 @@ int main(int argc, char *argv[]){
 		else if(strcmp(token, "<token>")==0) {	//if this is a token
 			client_t clientNeighbor;
 			token = strtok_r(NULL, delim, &saveptr); 	//This line is number of clients!
-			//TODO CHECK IF CLIENT WANTS TO EXIT. IF SO, -- THIS NUMBER!!!
+
+			//CHECK IF CLIENT WANTS TO EXIT. IF SO, -- THIS NUMBER!!!
 			int numberOfClients = atoi(token);
 			int futureNumberOfClients = numberOfClients;
 			int tempExitStatus; //will hold the current value of isExitRequest until next iteration
@@ -207,7 +208,6 @@ int main(int argc, char *argv[]){
 
 		}
 		//exit(0);
-		//TODO CHECK IF JOIN REQUEST!!!!!
 
 	}
 
@@ -215,39 +215,39 @@ int main(int argc, char *argv[]){
 	//***new***
 	int loop = 0,sequence = 0;
 	char choice;
-	
+
 	while(loop == 0){
 		printf( "\n-->Enter w for Write operation!! Appends a new message to the end of the message board\n");
 		printf( "-->Enter r for Read operation!! Read a particular message from the message board using a message sequence number. # is the sequence number of the message on the board. \n");
 		printf( "-->Enter l for List operation!! Displays the range of valid sequence numbers of messages posted to the board. \n");
 		printf( "-->Enter e for Exit operation!! Closes the message board. Exit requires that the user leaves the logical token ring.\n\n");
 		printf( "I choose-->");
-       		scanf(" %c", &choice);//get the user choice
+		scanf(" %c", &choice);//get the user choice
 		getchar();//handles the newline that remains in the buffer cause of scanf()
 		//printf("|%c|",choice);
 		switch(choice) {
-        		case 'w' :
+		case 'w' :
 			writeFile(filename, iterate);
 			printf("Okay, writing to the file.\n" );
 			iterate++;//increment the message number
-        		break;
-        		case 'r' :
+			break;
+		case 'r' :
 			printf("Which message number do you want to read?");
 			scanf(" %d", &sequence);
 			printf("Users wanted to read message %d\n",sequence);
 			getchar();
-        		readFile(filename,sequence);
-        		break;
-        		case 'l' :
-       			 printf("Sequence number ranges from 0 to %d\n" ,iterate);
-        		break;
-        		case 'e' :
-        		printf("Exiting now, token is release.\n" );
+			readFile(filename,sequence);
+			break;
+		case 'l' :
+			printf("Sequence number ranges from 0 to %d\n" ,iterate);
+			break;
+		case 'e' :
+			printf("Exiting now, token is release.\n" );
 			loop = 1;//escape out of the while loop
-        		break;
-        		default :
-        		printf("Please choose the correct option!!!\n" );
-   		}	
+			break;
+		default :
+			printf("Please choose the correct option!!!\n" );
+		}
 	}
 	//***new***
 	return(0);

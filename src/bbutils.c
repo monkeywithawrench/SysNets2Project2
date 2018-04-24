@@ -1,19 +1,22 @@
 /*************************************************************** 
  * Student Name: Jeff Morton
+ * Student Name: Thanh Tran
  * File Name: bbutils.c
  * Assignment Number: 
  * Date Due: Apr 16, 2018
  * 
  *  Created on: Apr 16, 2018
  *      Author: Jeff Morton
+ *      Author: Thanh Tran
  ***************************************************************/
 #include <stdio.h>          //Standard IO
 #include <stdlib.h>         //Standard library
-#include <string.h>        //String Library
+#include <string.h>        	//String Library
 //#include <strings.h>         //Strings Library
 #include <sys/socket.h>     //API and definitions for the sockets
 #include <sys/types.h>      //more definitions
 #include <netinet/in.h>     //Structures to store address information
+#include <errno.h>			//Used for accessing errno, an int variable set by some system calls and library functions to an error number
 
 #include "bbutils.h"
 
@@ -92,7 +95,7 @@ void readFile(char*filename,int msgNum){
  */
 void writeFile(char*filename,int msgNum){
 	
-   FILE *fp = fopen(filename, "a+");
+   FILE *fp = fopen(filename, "a+"); //a+ to read and append. Change to a if we're only appending
    char header[BUFFER_SIZE];
    char footer[BUFFER_SIZE];
    char str[BUFFER_SIZE];
