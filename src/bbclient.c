@@ -125,11 +125,12 @@ int main(int argc, char *argv[]){
 			exit(1);
 		}
 		if(strcmp(token, "<join request>")==0) {	//if this is a join request
-			isJoinRequest = 1;
 			token = strtok_r(NULL, delim, &saveptr);
 			char temp2[BUFFER_SIZE];
 			strncpy(temp2, token, BUFFER_SIZE);
+			fprintf(stdout, "Joining client: %s\n", temp2);
 			newClient = string2client_t(temp2, BUFFER_SIZE);
+			isJoinRequest = 1;
 		}
 		else if(strcmp(token, "<token>")==0) {	//if this is a token
 			client_t clientNeighbor;
@@ -152,7 +153,7 @@ int main(int argc, char *argv[]){
 			if(isJoinRequest) {
 				asprintf(&tokenMessage, "%s%d\n", tokenMessage, numberOfClients+1); //+1 for new client!
 				asprintf(&tokenMessage, "%s%s %d\n", tokenMessage, newClient.hostname, newClient.port); //Joining client added to ring after this client
-				isJoinRequest = 0; //RESET JOIN REQUEST STATUS
+				//isJoinRequest = 0; //RESET JOIN REQUEST STATUS
 			} else
 				asprintf(&tokenMessage, "%s%d\n", tokenMessage, numberOfClients);
 			asprintf(&tokenMessage, "%s%s %d\n", tokenMessage, clientNeighbor.hostname, clientNeighbor.port);
@@ -175,6 +176,9 @@ int main(int argc, char *argv[]){
 			}
 
 			fprintf(stdout, "Sent %d bytes to %s %d, Waiting for next token\n", n, clientNeighbor.hostname, clientNeighbor.port);
+			if(isJoinRequest)
+				exit(0);
+
 		}
 		else {
 
