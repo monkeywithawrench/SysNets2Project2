@@ -5,7 +5,7 @@ Message formats:
 
 Token:
 <token>
-NOPE sharefilename.txt //the name of the shared bb file
+sharefilename.txt //the name of the shared bb file. This is only sent to the server at startup
 numberOfClients
 ip port //(first client in the ring, this will be shifted every time the token is transfered from one client to the next)
 ip port //2nd client
