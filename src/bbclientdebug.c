@@ -59,7 +59,7 @@ int main(int argc, char *argv[]){
 
 	int isJoinRequest = 0; //1 if there is a pending join request, else 0
 	int isExitRequest = 0; //0 normally, only 1 when client wants to exit ring
-	pthread_mutex_t exitRequestMutex; //Mutex for isExitRequest
+	pthread_mutex_t exitRequestMutex = PTHREAD_MUTEX_INITIALIZER; //Mutex for isExitRequest
 
 	//init our strings
 	memset(filename, 0, BUFFER_SIZE);
