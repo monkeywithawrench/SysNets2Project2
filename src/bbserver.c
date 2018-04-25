@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
 	}
 
 
-	fprintf(stdout, "Waiting for client info\n");
+	fprintf(stdout, "Waiting on %d clients to join.\n", numberOfClients);
 
 	//get all client info
 	getClients(sockfd, serverAddr, clientList, numberOfClients);
@@ -123,11 +123,10 @@ void getClients(int sockfd, struct sockaddr_in serverAddr, client_t *clientList,
 		memset(buffer, 0, BUFFER_SIZE);
 		int messagelen = recvfrom(sockfd, buffer, BUFFER_SIZE-1, 0, NULL, NULL); //BUFFER_SIZE-1 so null term doesn't overflow buffer
 		if(messagelen <0) {
-			fprintf(stderr, "Error receiving message from client at the server, error number %d: ", errno);
+			fprintf(stderr, "Error receiving message from client, error number %d: ", errno);
 			perror("");
 			exit(errno);
 		}
-		fprintf(stdout, "Received client info\n");
 		//if we made it this far, no errors yet
 		char temp[strlen(buffer)+1]; //+1 for null term
 		strcpy(temp, buffer);
@@ -155,6 +154,7 @@ void getClients(int sockfd, struct sockaddr_in serverAddr, client_t *clientList,
 			strcpy(clientList[i].hostname, token);
 			token = strtok(NULL, delim); //get port# from 2nd line
 			clientList[i].port = atoi(token);
+			fprintf(stdout, "Received client info from %s %d. Waiting on %d more clients to join.\n", clientList[i].hostname, clientList[i].port, numberOfClients-i-1);
 		}
 	}
 }
@@ -171,7 +171,6 @@ void sendClients(int sockfd, client_t *clientList, int numberOfClients) {
 	char *response;
 	//Set up response to send to clients
 	asprintf(&response, "<token>\n");
-	//asprintf(&response, "%s%s\n", response, filename);
 	asprintf(&response, "%s%d\n", response, numberOfClients);
 	for(i=0; i<numberOfClients; i++)
 		asprintf(&response, "%s%s %d\n", response, clientList[i].hostname, clientList[i].port);
@@ -183,7 +182,7 @@ void sendClients(int sockfd, client_t *clientList, int numberOfClients) {
 	int n = sendMessage(sockfd, clientList[0].hostname, clientList[0].port, response);
 	//Check for send success
 	if (n < 0){
-		fprintf(stderr,"sendto(client) failed with error number: %d: ", errno);
+		fprintf(stderr,"Error sending info to client: sendto() failed with error number: %d: ", errno);
 		perror("");
 		exit(errno);
 	}

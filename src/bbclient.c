@@ -111,13 +111,12 @@ int main(int argc, char *argv[]){
 	asprintf(&joinRequest, "<join request>\n");
 	asprintf(&joinRequest, "%s%s\n", joinRequest, filename);
 	asprintf(&joinRequest, "%s%s %d\n", joinRequest, hostname, clientPort);
-	asprintf(&joinRequest, "%s%s\n", joinRequest, filename);
 	asprintf(&joinRequest, "%s</join request>\n", joinRequest);
 
 	n = sendMessage(sockfd, hostname, serverPort, joinRequest); //Sends message to server
 	//Check sendto success
 	if (n < 0){
-		fprintf(stderr,"sendto(server) failed with error number: %d: ", errno);
+		fprintf(stderr,"Error sending info to server: sendto() failed with error number: %d: ", errno);
 		perror("");
 		exit(errno);
 	}
@@ -148,22 +147,16 @@ int main(int argc, char *argv[]){
 
 	//START PASSING TOKEN!
 	while(1 == 1) {
-
-		//Wait for and receive token
-		/* MSG_PEEK stopped working :|
-		int bufferlen = recvfrom(sockfd, NULL, 0, MSG_PEEK, NULL, NULL); //Gets length of message in socket buffer. MSG_PEEK specifies check socket buffer but leave it unread
-		if(bufferlen <0) {
-			fprintf(stderr, "Error receiving(peeking) message from server at the client, error number %d: ", errno);
-			perror("");
-			exit(errno);
-		}
-		*/
 		//pthread_mutex_lock(&readWriteMutex); //lock the readWriteMutex (Really, we're checking if we need to halt to wait for IO thread)
 		int bufferlen = 999; //arbitrary, but large enough
 		char buffer[bufferlen+1]; //sets buffer size to exact length of message +1 char for null terminator
 		memset(buffer, 0, bufferlen+1); //init's the buffer
 		bufferlen = recvfrom(sockfd, buffer, bufferlen, 0, NULL, NULL); //copies message into buffer
-		//TODO check this system call, noob!
+		if(bufferlen <0) {
+			fprintf(stderr, "Error receiving message from client, error number %d: ", errno);
+			perror("");
+			exit(errno);
+		}
 
 		//Save a copy of buffer, we're about to mutilate this string lol
 		char temp[strlen(buffer)+1]; //+1 for null term
@@ -177,7 +170,8 @@ int main(int argc, char *argv[]){
 			exit(1);
 		}
 		if(strcmp(token, "<join request>")==0) {	//if this is a join request
-			token = strtok_r(NULL, delim, &saveptr);
+			token = strtok_r(NULL, delim, &saveptr); //This line is filename
+			token = strtok_r(NULL, delim, &saveptr); //this line is IP info
 			char temp2[BUFFER_SIZE];
 			strncpy(temp2, token, BUFFER_SIZE);
 			fprintf(stdout, "Joining client: %s\n", temp2);
@@ -237,10 +231,10 @@ int main(int argc, char *argv[]){
 				clientNeighbor.port = newClient.port;
 				isJoinRequest = 0; //RESET JOIN REQUEST STATUS
 			}
-			n = sendMessage(sockfd, clientNeighbor.hostname, clientNeighbor.port, tokenMessage); //Sends message to server
+			n = sendMessage(sockfd, clientNeighbor.hostname, clientNeighbor.port, tokenMessage); //Sends message to neighbor
 				//Check sendto success
 			if (n < 0){
-				fprintf(stderr,"sendto(neighbor) failed with error number: %d: ", errno);
+				fprintf(stderr,"Error sending token to neighbor: sendto() failed with error number: %d: ", errno);
 				perror("");
 				exit(errno);
 			}
