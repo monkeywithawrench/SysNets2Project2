@@ -17,6 +17,7 @@
 #include <sys/types.h>      //more definitions
 #include <netinet/in.h>     //Structures to store address information
 #include <errno.h>			//Used for accessing errno, an int variable set by some system calls and library functions to an error number
+#include <pthread.h>		//Needed for mutex and pthread_create
 
 #include "bbutils.h"
 
@@ -81,11 +82,11 @@ int readFile(char *filename, int msgNum, pthread_mutex_t *readWriteMutex) {
 		pthread_mutex_unlock(readWriteMutex); //unlock the mutex now that we're done
 		return(0);
 	}
-	FILE *fp = fopen(filename, "r");
+	FILE *fp = fopen(filename, "r+");
 	char match[BUFFER_SIZE];//the message number that'll be search
 	char buff[BUFFER_SIZE];//file read goes into this buffer
 	if (fp == NULL) {
-		fprintf(stderr, "\nOops, '%s' could not open for read.\n",filename);
+		fprintf(stderr, "\nOops, '%s' could not open for read. FP Null\n",filename);
 		return(-1); //return error code
 	}
 	sprintf(match,"<message n=%d>\n",msgNum);//set text w/ iterated number like in a printf format to this string
@@ -114,6 +115,7 @@ int writeFile(char *filename, pthread_mutex_t *readWriteMutex) {
 	char str[BUFFER_SIZE];
 	printf( "Enter a string-->");
 	fgets(str,sizeof(str),stdin); //get user input string. Locking before here would cause deadlock until user entered a string...
+	printf("user entered message: %s", str);
 	pthread_mutex_lock(readWriteMutex); //this will lock the main thread once it acquires a token
 	int messageCount = getMesssageCount(filename, readWriteMutex, 1); //get the current number of messages in the file
 	if(messageCount == -1)
@@ -126,7 +128,7 @@ int writeFile(char *filename, pthread_mutex_t *readWriteMutex) {
 	sprintf(footer,"</message>\n");
 
 	if(fp == NULL) {//checks file can open
-		fprintf(stderr, "\nOops, '%s' could not open for write.\n",filename);
+		fprintf(stderr, "\nOops, '%s' could not open for write. FP Null\n",filename);
 		pthread_mutex_unlock(readWriteMutex); //unlock the mutex now that we're done
 		return(-1); //return error code
 	}
@@ -149,19 +151,23 @@ int writeFile(char *filename, pthread_mutex_t *readWriteMutex) {
 int getMesssageCount(char *filename, pthread_mutex_t *readWriteMutex, int mutexLocked) {
 	if(!mutexLocked) //if the mutex is not already locked by another function, lock mutex
 		pthread_mutex_lock(readWriteMutex); //this will lock the main thread once it acquires a token
-	FILE *fp = fopen(filename, "r");
+	FILE *fp = fopen(filename, "r+");
 	char buff[BUFFER_SIZE];//file read goes into this buffer
+	char match[BUFFER_SIZE];//the message number that'll be search
 	int messageCount = 0;
 	if (fp == NULL) {
-		fprintf(stderr, "\nOops, '%s' could not open for read.\n",filename);
+		fprintf(stderr, "\nOops, '%s' could not open for checking message count. FP Null\n",filename);
 		if(!mutexLocked)
 			pthread_mutex_unlock(readWriteMutex); //unlock the mutex now that we're done
 		return(-1); //return error code
 	}
-	while(fgets (buff, BUFFER_SIZE, fp)!=NULL){//look through the whole file
-		if(strcmp(buff, "<message n=") == 0)
+
+	while(fgets (buff, BUFFER_SIZE, fp)!=NULL) {//look through the whole file
+		sprintf(match,"<message n=%d>\n",messageCount+1);//set text w/ iterated number like in a printf format to this string
+		if(strcmp(buff, match) == 0)
 			messageCount++;
 	}
+
 	fclose(fp);
 	if(!mutexLocked) //if the mutex is not already locked by another function, lock mutex
 		pthread_mutex_unlock(readWriteMutex); //unlock the mutex now that we're done

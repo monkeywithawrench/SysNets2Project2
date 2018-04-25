@@ -9,6 +9,7 @@
  *      Author: Jeff Morton
  *      Author: Thanh Tran
  ***************************************************************/
+#include <pthread.h>		//Needed for mutex and pthread_create
 
 
 #define BUFFER_SIZE 256

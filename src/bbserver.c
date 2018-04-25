@@ -139,6 +139,17 @@ void getClients(int sockfd, struct sockaddr_in serverAddr, client_t *clientList,
 			exit(1);
 		}
 		if(strcmp(token, "<join request>")==0) {//if this is a join request
+			token = strtok(NULL, delim); //ip from 2nd line
+			char filename[strlen(token)+1];
+			strncpy(filename, token, strlen(token)+1);
+			FILE *fp = fopen(filename, "w+");
+			if (fp == NULL) {
+				fprintf(stderr, "Error creating bulletin board file %s! Errno: %d \n", filename, errno);
+				perror("");
+				exit(errno); //return error code
+			}
+			fclose(fp);
+
 			strncpy(delim, " ", 2);
 			token = strtok(NULL, delim); //ip from 2nd line
 			strcpy(clientList[i].hostname, token);

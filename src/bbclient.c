@@ -109,6 +109,7 @@ int main(int argc, char *argv[]){
 	char *joinRequest;
 	//Set up join request to send to server
 	asprintf(&joinRequest, "<join request>\n");
+	asprintf(&joinRequest, "%s%s\n", joinRequest, filename);
 	asprintf(&joinRequest, "%s%s %d\n", joinRequest, hostname, clientPort);
 	asprintf(&joinRequest, "%s%s\n", joinRequest, filename);
 	asprintf(&joinRequest, "%s</join request>\n", joinRequest);
@@ -155,7 +156,7 @@ int main(int argc, char *argv[]){
 			exit(errno);
 		}
 		*/
-		pthread_mutex_lock(readWriteMutex); //lock the readWriteMutex (Really, we're checking if we need to halt to wait for IO thread)
+		pthread_mutex_lock(&readWriteMutex); //lock the readWriteMutex (Really, we're checking if we need to halt to wait for IO thread)
 		int bufferlen = 999; //arbitrary, but large enough
 		char buffer[bufferlen+1]; //sets buffer size to exact length of message +1 char for null terminator
 		memset(buffer, 0, bufferlen+1); //init's the buffer
@@ -227,7 +228,7 @@ int main(int argc, char *argv[]){
 			asprintf(&tokenMessage, "%s</token>\n",tokenMessage);
 			//TOKEN MESSAGE COMPLETE!
 
-			fprintf(stdout, "\n\n%s\n", tokenMessage);
+			//fprintf(stdout, "\n\n%s\n", tokenMessage);
 			if(isJoinRequest) {
 				strncpy(clientNeighbor.hostname, newClient.hostname, BUFFER_SIZE);
 				clientNeighbor.port = newClient.port;
@@ -242,7 +243,7 @@ int main(int argc, char *argv[]){
 			}
 
 			if(tempExitStatus) {
-				fprintf(stdout, "Sent %d bytes to %s %d. Client requested to exit\n", n, clientNeighbor.hostname, clientNeighbor.port);
+				//fprintf(stdout, "Sent %d bytes to %s %d. Client requested to exit\n", n, clientNeighbor.hostname, clientNeighbor.port);
 				fprintf(stdout, "Client has been removed from the ring. Exiting.");
 				errno = pthread_join(userIOthread, NULL);
 				if(errno) {
@@ -253,7 +254,7 @@ int main(int argc, char *argv[]){
 			}
 			//fprintf(stdout, "Sent %d bytes to %s %d, Waiting for next token\n", n, clientNeighbor.hostname, clientNeighbor.port); //if above statement passed, this won't be reached
 		}
-		pthread_mutex_unlock(readWriteMutex); //unlock the mutex now that we're done
+		pthread_mutex_unlock(&readWriteMutex); //unlock the mutex now that we're done
 		//exit(0);
 
 	}
@@ -275,7 +276,7 @@ void * userIO(void *arg) {
 	//pthread_mutex_t *exitRequestMutex = parameters->exitRequestMutexPtr;
 	//int *isExitRequest = parameters->isExitRequestPtr; //0 normally, only 1 when client wants to exit ring
 
-	int iterate = 0;	//iterate Message number of the latest message in bulletin board, also the number of messages in bb
+	//int iterate = 0;	//iterate Message number of the latest message in bulletin board, also the number of messages in bb
 	int loop = 0;
 	int sequence = 0;	//sequence Variable, this is message number the user would like to read
 	char choice;
@@ -289,6 +290,7 @@ void * userIO(void *arg) {
 		scanf(" %c", &choice);//get the user choice
 		getchar();//handles the newline that remains in the buffer cause of scanf()
 		//printf("|%c|",choice);
+		int seqNumber;
 		switch(choice) {
 		case 'w' :
 			printf("Okay, writing to the file.\n" );
@@ -305,7 +307,7 @@ void * userIO(void *arg) {
 			scanf(" %d", &sequence);
 			printf("Users wanted to read message %d\n",sequence);
 			getchar();
-			if((readFile(filename,sequence)) == -1) {
+			if((readFile(filename, sequence, parameters->readWriteMutexPtr)) == -1) {
 				printf("Error reading file, requesting exit from ring");
 				pthread_mutex_lock(parameters->exitRequestMutexPtr); //lock mutex for isExitRequest;
 				*(parameters->isExitRequestPtr) = 1; //set isExitRequest to 1, signaling our desire to exit
@@ -314,7 +316,7 @@ void * userIO(void *arg) {
 			}
 			break;
 		case 'l' :
-			int seqNumber = getMesssageCount(filename, parameters->readWriteMutexPtr, 0);
+			seqNumber = getMesssageCount(filename, parameters->readWriteMutexPtr, 0);
 			if(seqNumber == -1) {
 				printf("Error getting sequence number, requesting exit from ring");
 				pthread_mutex_lock(parameters->exitRequestMutexPtr); //lock mutex for isExitRequest;
