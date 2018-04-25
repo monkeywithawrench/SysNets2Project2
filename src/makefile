@@ -1,20 +1,17 @@
 CC = gcc
-CFLAGS = -g -Wall
+CFLAGS = -g -Wall -lpthread
 
-objects = bbserver.o bbclient.o bbclientdebug.o
+objects = bbserver.o bbclient.o
 
-all: bbserver bbclient bbclientdebug
+all: bbserver bbclient
 
 
 bbserver: bbserver.c bbutils.c bbutils.h
 	$(CC) -o bbserver bbserver.c bbutils.c bbutils.h $(CFLAGS)
 
 bbclient: bbclient.c bbutils.c bbutils.h
-	$(CC) -o bbclient bbclient.c bbutils.c bbutils.h $(CFLAGS) -lpthread
+	$(CC) -o bbclient bbclient.c bbutils.c bbutils.h $(CFLAGS)
 	
-bbclientdebug: bbclientdebug.c bbutils.c bbutils.h
-	$(CC) -o bbclientdebug bbclientdebug.c bbutils.c bbutils.h $(CFLAGS) -lpthread
-
 .PHONY : clean
 clean:
 	rm $(all) $(objects)
