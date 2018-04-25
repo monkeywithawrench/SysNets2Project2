@@ -125,6 +125,8 @@ int main(int argc, char *argv[]){
 	fprintf(stdout, "Sent %d bytes, Waiting for server response\n", n);
 	fprintf(stdout, "Launching userIO thread.\n");
 
+	pthread_mutex_lock(&readWriteMutex); //lock the readWriteMutex (Really, we're checking if we need to halt to wait for IO thread)
+
 	pthread_t userIOthread;	//New thread
 	userIO_t userIOparams;	//Params struct of type userIO_t for thread function
 	userIOparams.filename = filename;
@@ -183,7 +185,8 @@ int main(int argc, char *argv[]){
 			isJoinRequest = 1;
 		}
 		else if(strcmp(token, "<token>")==0) {	//if this is a token
-			pthread_mutex_lock(&readWriteMutex); //lock the readWriteMutex (Really, we're checking if we need to halt to wait for IO thread)
+			//pthread_mutex_lock(&readWriteMutex); //lock the readWriteMutex (Really, we're checking if we need to halt to wait for IO thread)
+			pthread_mutex_unlock(&readWriteMutex); //unlock the mutex now that we're done
 			client_t clientNeighbor;
 			token = strtok_r(NULL, delim, &saveptr); 	//This line is number of clients!
 
@@ -254,7 +257,8 @@ int main(int argc, char *argv[]){
 				exit(0);
 			}
 			//fprintf(stdout, "Sent %d bytes to %s %d, Waiting for next token\n", n, clientNeighbor.hostname, clientNeighbor.port); //if above statement passed, this won't be reached
-			pthread_mutex_unlock(&readWriteMutex); //unlock the mutex now that we're done
+			//pthread_mutex_unlock(&readWriteMutex); //unlock the mutex now that we're done
+			pthread_mutex_lock(&readWriteMutex); //lock the readWriteMutex (Really, we're checking if we need to halt to wait for IO thread)
 		}
 		//pthread_mutex_unlock(&readWriteMutex); //unlock the mutex now that we're done
 		//exit(0);
