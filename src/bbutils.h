@@ -17,8 +17,8 @@
 /* Data struct for list of clients */
 typedef struct
 {
-    char hostname[BUFFER_SIZE];
-    int port;
+	char hostname[BUFFER_SIZE];
+	int port;
 }client_t;
 
 
@@ -46,15 +46,25 @@ client_t string2client_t(char *string, int strlen);
  *
  * @param filename the name of the bulletin board text file 
  * @param msgNum the requested message 
+ * @param readWriteMutex pointer to the readWriteMutex, used to halt passing the token until fileIO completes
+ * @return returns 0 on success, returns -1 if an error occurs
  */
-void readFile(char*filename,int msgNum);
+int readFile(char *filename, int msgNum, pthread_mutex_t *readWriteMutex);
 
 /**Open up the filename for write operation and
  * write it in the specified format
  *
  * @param filename the name of the bulletin board text file 
- * @param msgNum the message number 
+ * @param readWriteMutex pointer to the readWriteMutex, used to halt passing the token until fileIO completes
+ * @return returns 0 on success, returns -1 if an error occurs
  */
-void writeFile(char*filename,int  msgNum);
+int writeFile(char *filename, pthread_mutex_t *readWriteMutex);
 
-
+/** Returns the current number of messages in the bbfile
+ *
+ * @param filename filename of the bbfile
+ * @param readWriteMutex pointer to the readWriteMutex, used to halt passing the token until fileIO completes
+ * @param mutexLocked an signaling whether readWriteMutex has already been locked or not, to avoid deadlock
+ * @return the number of messages currently in the bulletinboard file. Returns -1 if an error occurred.
+ */
+int getMesssageCount(char *filename, pthread_mutex_t *readWriteMutex, int mutexLocked);
