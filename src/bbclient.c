@@ -125,7 +125,7 @@ int main(int argc, char *argv[]){
 	fprintf(stdout, "Sent %d bytes, Waiting for server response\n", n);
 	fprintf(stdout, "Launching userIO thread.\n");
 
-	pthread_mutex_lock(&readWriteMutex); //lock the readWriteMutex (Really, we're checking if we need to halt to wait for IO thread)
+	pthread_mutex_lock(&readWriteMutex); //lock the readWriteMutex until we receive the token
 
 	pthread_t userIOthread;	//New thread
 	userIO_t userIOparams;	//Params struct of type userIO_t for thread function
@@ -185,8 +185,7 @@ int main(int argc, char *argv[]){
 			isJoinRequest = 1;
 		}
 		else if(strcmp(token, "<token>")==0) {	//if this is a token
-			//pthread_mutex_lock(&readWriteMutex); //lock the readWriteMutex (Really, we're checking if we need to halt to wait for IO thread)
-			pthread_mutex_unlock(&readWriteMutex); //unlock the mutex now that we're done
+			pthread_mutex_unlock(&readWriteMutex); //unlock the mutex now that we have the token
 			client_t clientNeighbor;
 			token = strtok_r(NULL, delim, &saveptr); 	//This line is number of clients!
 
@@ -257,8 +256,7 @@ int main(int argc, char *argv[]){
 				exit(0);
 			}
 			//fprintf(stdout, "Sent %d bytes to %s %d, Waiting for next token\n", n, clientNeighbor.hostname, clientNeighbor.port); //if above statement passed, this won't be reached
-			//pthread_mutex_unlock(&readWriteMutex); //unlock the mutex now that we're done
-			pthread_mutex_lock(&readWriteMutex); //lock the readWriteMutex (Really, we're checking if we need to halt to wait for IO thread)
+			pthread_mutex_lock(&readWriteMutex); //lock the readWriteMutex until we receive the token
 		}
 		//pthread_mutex_unlock(&readWriteMutex); //unlock the mutex now that we're done
 		//exit(0);
@@ -330,7 +328,10 @@ void * userIO(void *arg) {
 				pthread_mutex_unlock(parameters->exitRequestMutexPtr); //unlock mutex for isExitRequest;
 				return(NULL); //exit IO thread
 			}
-			printf("Sequence number ranges from 0 to %d\n" ,seqNumber); //TODO
+			if(seqNumber == 0)
+				printf("There are currently no messages. First message will start with 1.\n");
+			else
+				printf("Sequence number ranges from 1 to %d\n" ,seqNumber);
 			break;
 		case 'e' :
 			printf("Requesting to exit.\n");
